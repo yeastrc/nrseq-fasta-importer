@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+
+<struts-config>
+  <data-sources />
+  <form-beans />
+  <global-exceptions />
+
+  <global-forwards>
+
+  		<forward name="welcome" path="/home.do" redirect="false" />
+  		<forward name="home" path="/home.do" redirect="false" />
+  		
+  		<forward name="generalError" path="/WEB-INF/jsp-pages/generalError.jsp" />
+  		
+  </global-forwards>
+  
+  
+
+    <action-mappings>
+
+			
+<!--  			
+		<action
+		   path="/home"
+		   forward="/WEB-INF/jsp-pages/home.jsp">
+		</action>		
+-->
+	
+		<action path="/home"
+				type="org.yeastrc.nrseq_fasta_importer.www.struts.HomeAction"
+				scope="request"
+				validate="false">
+			<forward name="Success" path="/WEB-INF/jsp-pages/home.jsp" redirect="false" />
+		</action>	
+		
+		<action
+		   path="/importFASTA_page"
+		   forward="/WEB-INF/jsp-pages/importFASTA_form.jsp">
+		</action>			
+		
+		<action 
+		   path="/listSubmittedFiles"
+		   forward="/WEB-INF/jsp-pages/listSubmittedFiles.jsp">
+		</action>			
+		
+		<action 
+		   	path="/showFile"
+			forward="/WEB-INF/jsp-pages/showFile.jsp">
+		</action>
+		
+	</action-mappings>
+	
+  <message-resources parameter="org.yeastrc.nrseq_fasta_importer.ApplicationResources" />
+</struts-config>
+

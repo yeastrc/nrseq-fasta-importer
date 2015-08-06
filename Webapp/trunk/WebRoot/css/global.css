@@ -1,0 +1,42 @@
+
+.failed-status { background-color: #FFDDDD; }
+
+.user-input-required-status { background-color: #FFFFDD; }
+
+.queued-status, .started-status, .complete-status { background-color: #DDFFDD; }
+
+
+table#no_tax_id_table { padding: 0px; margin: 0px; border-spacing: 0px; }
+ 
+
+table#no_tax_id_table { border-collapse: collapse; }
+
+table#no_tax_id_table, table#no_tax_id_table th, table#no_tax_id_table td {
+   border: 1px solid grey; 
+}
+table#no_tax_id_table th, table#no_tax_id_table td {
+	padding-left: 10px; padding-right: 10px; 
+}
+
+table#no_tax_id_table th.header-line-number , table#no_tax_id_table td.header-line-number { 
+	text-align: right; padding-right: 15px; 
+}
+
+
+
+
+div#submitted_fasta_files table { padding: 0px; margin: 0px; border-spacing: 0px; }
+ 
+
+div#submitted_fasta_files table { border-collapse: collapse; }
+
+div#submitted_fasta_files table, div#submitted_fasta_files table th, div#submitted_fasta_files table td {
+   border: 1px solid grey; 
+}
+div#submitted_fasta_files table th, div#submitted_fasta_files table td {
+	padding-left: 10px; padding-right: 10px; 
+}
+
+div#submitted_fasta_files table th.header-line-number , div#submitted_fasta_files table td.header-line-number { 
+	text-align: right; padding-right: 15px; 
+}
