@@ -7,8 +7,8 @@ import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdParams;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdResult;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.TaxonomyIdLookupIF;
-import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.uniprot.by_accession.GetNCBITaxonomyDataFromUniprot_assessionNumberWebservice;
-import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.uniprot.by_accession.GetNCBITaxonomyDataFromUniprot_assessionNumberWebserviceResponse;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_services.GetNCBITaxonomyDataFrom_Uniprot_Service;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_services.GetNCBITaxonomyDataFrom_Uniprot_ServiceResponse;
 
 
 
@@ -105,9 +105,11 @@ public class TaxonomyIdFrom_UniProt_inDescription implements TaxonomyIdLookupIF 
         	gm = this.uniprotPattern.matcher( headerName );
 
         	if( gm.matches() ) {
-        		GetNCBITaxonomyDataFromUniprot_assessionNumberWebservice uns = GetNCBITaxonomyDataFromUniprot_assessionNumberWebservice.getInstance();
-        		GetNCBITaxonomyDataFromUniprot_assessionNumberWebserviceResponse response =
-        				uns.getTaxonomyID( headerName );
+        		
+        		GetNCBITaxonomyDataFrom_Uniprot_ServiceResponse response =
+        				GetNCBITaxonomyDataFrom_Uniprot_Service.getInstance().
+        					getNCBITaxonomyDataFrom_Uniprot_Service( headerName );
+        		
         		taxonomyId = response.getTaxonomyId();
         		if( taxonomyId != null ) 
         			return taxonomyId;
@@ -116,9 +118,13 @@ public class TaxonomyIdFrom_UniProt_inDescription implements TaxonomyIdLookupIF 
         	//other uniprot pattern handler here
         	gm = this.uniprotPattern2.matcher( fullHeaderString );
         	if( gm.matches() ) {
-        		GetNCBITaxonomyDataFromUniprot_assessionNumberWebservice uns = GetNCBITaxonomyDataFromUniprot_assessionNumberWebservice.getInstance();
-        		GetNCBITaxonomyDataFromUniprot_assessionNumberWebserviceResponse response =
-        				uns.getTaxonomyID( gm.group( 1 ) );
+        		
+        		String uniprotAccession = gm.group( 1 );
+
+        		GetNCBITaxonomyDataFrom_Uniprot_ServiceResponse response =
+        				GetNCBITaxonomyDataFrom_Uniprot_Service.getInstance().
+        					getNCBITaxonomyDataFrom_Uniprot_Service( uniprotAccession );
+        		
         		taxonomyId = response.getTaxonomyId();
         		if( taxonomyId != null ) 
         			return taxonomyId;

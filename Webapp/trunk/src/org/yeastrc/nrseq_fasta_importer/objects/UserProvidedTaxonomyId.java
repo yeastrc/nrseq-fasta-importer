@@ -1,9 +1,9 @@
 package org.yeastrc.nrseq_fasta_importer.objects;
 
-public class UserProvidedTaxonomyIds {
+public class UserProvidedTaxonomyId {
 	
 	private int noTaxonomyIdRecordId;
-	private int taxonomyId;
+	private Integer taxonomyId;
 	
 	
 	public int getNoTaxonomyIdRecordId() {
@@ -12,10 +12,10 @@ public class UserProvidedTaxonomyIds {
 	public void setNoTaxonomyIdRecordId(int noTaxonomyIdRecordId) {
 		this.noTaxonomyIdRecordId = noTaxonomyIdRecordId;
 	}
-	public int getTaxonomyId() {
+	public Integer getTaxonomyId() {
 		return taxonomyId;
 	}
-	public void setTaxonomyId(int taxonomyId) {
+	public void setTaxonomyId(Integer taxonomyId) {
 		this.taxonomyId = taxonomyId;
 	}
 }

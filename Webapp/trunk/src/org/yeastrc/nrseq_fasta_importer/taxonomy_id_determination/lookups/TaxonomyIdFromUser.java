@@ -1,15 +1,15 @@
-package org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination;
+package org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.yeastrc.fasta.FASTAEntry;
-import org.yeastrc.fasta.FASTAHeader;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedDTO;
-import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdParams;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdResult;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.TaxonomyIdLookupIF;
 
-public class TaxonomyIdFromUser {
+public class TaxonomyIdFromUser implements TaxonomyIdLookupIF {
 
 	private static final Logger log = Logger.getLogger(TaxonomyIdFromUser.class);
 	
@@ -27,7 +27,8 @@ public class TaxonomyIdFromUser {
 	 * @return
 	 * @throws Exception
 	 */
-	public DetermineTaxonomyIdResult getTaxonomyId( FASTAHeader header, FASTAEntry fastaEntry, FASTAImportTrackingDTO fastaImportTrackingDTO ) throws Exception {
+	@Override
+	public DetermineTaxonomyIdResult getTaxonomyId( DetermineTaxonomyIdParams determineTaxonomyIdParams ) throws Exception {
 		
 		
 		DetermineTaxonomyIdResult determineTaxonomyIdResult = new DetermineTaxonomyIdResult();
@@ -36,10 +37,10 @@ public class TaxonomyIdFromUser {
 		Integer taxonomyId = null;
 		
 		
-		String headerName = header.getName();
+		String headerName = determineTaxonomyIdParams.getHeaderName();
 //		String headerDescription = header.getDescription();
 		
-		int fastaImportTrackingId = fastaImportTrackingDTO.getId();
+		int fastaImportTrackingId = determineTaxonomyIdParams.getFastaImportTrackingDTOId();
 	
 		List<FASTAHeaderNoTaxIdDeterminedDTO>  taxList = 
 				FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingIdHeaderName( fastaImportTrackingId, headerName );
@@ -71,4 +72,5 @@ public class TaxonomyIdFromUser {
 		
 		return determineTaxonomyIdResult;
 	}
+
 }

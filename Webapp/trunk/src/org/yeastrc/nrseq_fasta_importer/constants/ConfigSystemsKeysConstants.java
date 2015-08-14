@@ -47,7 +47,7 @@ public class ConfigSystemsKeysConstants {
 //INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
 //VALUES ('server_url', '??????');
 
-//  http://192.168.1.2:9080
+//  http://192.168.1.2:8080
 
 
 // Email

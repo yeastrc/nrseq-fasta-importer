@@ -1,26 +1,24 @@
 package org.yeastrc.nrseq_fasta_importer.uploaded_file;
 
-import java.io.File;
 
 import org.apache.log4j.Logger;
-import org.yeastrc.nrseq_fasta_importer.dao.TempUploadFileIdCreatorDAO;
 
 /**
  * Returns File object for local file that uploaded file will be saved as.
  *
  */
-public class GetTempLocalFileForUploadedFile {
+public class GetTempLocalFilenameForTempFilenameNumber {
 	
-	private static final Logger log = Logger.getLogger(GetTempLocalFileForUploadedFile.class);
+	private static final Logger log = Logger.getLogger(GetTempLocalFilenameForTempFilenameNumber.class);
 
 	//  private constructor
-	private GetTempLocalFileForUploadedFile() { }
+	private GetTempLocalFilenameForTempFilenameNumber() { }
 	
 	/**
 	 * @return newly created instance
 	 */
-	public static GetTempLocalFileForUploadedFile getInstance() { 
-		return new GetTempLocalFileForUploadedFile(); 
+	public static GetTempLocalFilenameForTempFilenameNumber getInstance() { 
+		return new GetTempLocalFilenameForTempFilenameNumber(); 
 	}
 	
 	
@@ -28,23 +26,37 @@ public class GetTempLocalFileForUploadedFile {
 	 * @return
 	 * @throws Exception
 	 */
-	public GetTempLocalFileForUploadedFileResult getTempLocalFileForUploadedFile() throws Exception {
-		
-		GetTempLocalFileForUploadedFileResult getTempLocalFileForUploadedFileResult = new GetTempLocalFileForUploadedFileResult();
+	public String getTempLocalFileForUploadedFile( int tempFilenameNumber ) {
 
-
-		int nextTempFileId = TempUploadFileIdCreatorDAO.getInstance().getNextId();
+		String tempFilename = "FASTA_to_process_" + tempFilenameNumber + "_uploaded_fasta.fasta";
 		
-		String tempFilename = "FASTA_to_process_" + nextTempFileId + ".fasta";
-		String tempFilenameForImport = "FASTA_to_process_"  + nextTempFileId + "_to_import.xml";
-		
-
-		getTempLocalFileForUploadedFileResult.setTempFilename( tempFilename );
-		getTempLocalFileForUploadedFileResult.setTempFilenameForImport( tempFilenameForImport );
-		
-		return getTempLocalFileForUploadedFileResult;
+		return tempFilename;
 	}
 	
+	
+	/**
+	 * @return
+	 * @throws Exception
+	 */
+	public String getTempLocalFileForImport( int tempFilenameNumber ) {
+		
+		String tempFilenameForImport = "FASTA_to_process_"  + tempFilenameNumber + "_to_import.xml";
+
+		return tempFilenameForImport;
+	}
+	
+	
+	
+	/**
+	 * @return
+	 * @throws Exception
+	 */
+	public String getTempLocalFileForGetTaxonomyIdsProcessing( int tempFilenameNumber ) {
+		
+		String tempFilenameForImport = "FASTA_to_process_"  + tempFilenameNumber + "_to_get_taxonomy_ids.xml";
+
+		return tempFilenameForImport;
+	}
 	
 	
 	

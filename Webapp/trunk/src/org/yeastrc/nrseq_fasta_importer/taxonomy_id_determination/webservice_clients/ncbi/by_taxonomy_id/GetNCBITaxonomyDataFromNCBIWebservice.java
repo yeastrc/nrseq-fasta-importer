@@ -1,4 +1,4 @@
-package org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data;
+package org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id;
 
 import java.io.InputStream;
 
@@ -11,8 +11,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.NCBITaxonomyDataConstants;
-import org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data_dto.NcbiTaxonomyDataRootDTO;
-import org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data_dto.NcbiTaxonomyErrorRootDTO;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.webservice_response_dto.NcbiTaxonomyDataRootDTO;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.webservice_response_dto.NcbiTaxonomyErrorRootDTO;
 
 
 
