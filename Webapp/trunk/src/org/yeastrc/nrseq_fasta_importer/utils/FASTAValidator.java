@@ -8,6 +8,8 @@ package org.yeastrc.nrseq_fasta_importer.utils;
 
 import java.util.Arrays;
 
+import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
+
 /**
  * Description of class goes here.
  * 
@@ -49,11 +51,13 @@ public class FASTAValidator {
 		
 		char[] residues = sequence.toCharArray();
 		
-		for (int i = 0; i < residues.length; i++) {
-			if (Arrays.binarySearch( validProteinResidues, String.valueOf(residues[i])) < 0) {
-				if (residues[i] != '*' && residues[i] != '-' )
-					throw new Exception ( "Invalid sequence.  Invalid residue was: '" + residues[i] + "' in sequence:\n" + sequence );
+		for (int index = 0; index < residues.length; index++) {
+			if (Arrays.binarySearch( validProteinResidues, String.valueOf(residues[index])) < 0) {
+				if (residues[index] != '*' && residues[index] != '-' ) {
+					int indexStartAtOne = index + 1;
+					throw new FASTAImporterDataErrorException( "Invalid sequence.  Invalid residue was: '" + residues[index] + "' at position " + indexStartAtOne + " (sequence starts at position 1).  " );
 					//return false;
+				}
 			}
 		}
 		

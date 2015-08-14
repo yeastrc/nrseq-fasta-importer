@@ -283,6 +283,10 @@ public class SubmittedFilesWebservice {
 				|| ImportStatusContants.STATUS_IMPORT_FAILED.equals( status )  ) {
 			
 			getStatusResult.setFailed(true);
+			
+		} else if ( ImportStatusContants.STATUS_SYSTEM_ERROR_PROCESSING_FAILED.equals( status ) ) {
+			
+			getStatusResult.setSystemError(true);
 		}
 
 		//  get info on currently processing file.
@@ -298,12 +302,16 @@ public class SubmittedFilesWebservice {
 
 			if ( currentFastaImportTrackingDTO != null && currentFastaImportTrackingDTO.getId() == id ) {
 				
-				if ( ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) 
-					  || ImportStatusContants.STATUS_IMPORT_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
+				if ( ImportStatusContants.STATUS_VALIDATION_STARTED.equals( currentFastaImportTrackingDTO.getStatus() )
+						|| ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) 
+						|| ImportStatusContants.STATUS_IMPORT_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
 
-					getStatusResult.setTotalCount( processImportFASTAFile.getCurrentFASTAEntryCount() );
+					if ( processImportFASTAFile.getCurrentFASTAEntryCount() > 0 ) {
 
-					getStatusResult.setCurrentProcessCount( processImportFASTAFile.getCurrentSequenceCount() );
+						getStatusResult.setTotalCount( processImportFASTAFile.getCurrentFASTAEntryCount() );
+
+						getStatusResult.setCurrentProcessCount( processImportFASTAFile.getCurrentSequenceCount() );
+					}
 				}
 			}
 
@@ -327,12 +335,16 @@ public class SubmittedFilesWebservice {
 		private boolean importProcessing;
 		private boolean failed;
 		private boolean importComplete;
+
+		private boolean systemError;
 		
 		
 		
+
 		private Integer currentProcessCount;
 		private Integer totalCount;
 
+		
 		
 		
 		public Integer getCurrentProcessCount() {
@@ -346,6 +358,13 @@ public class SubmittedFilesWebservice {
 		}
 		public void setTotalCount(Integer totalCount) {
 			this.totalCount = totalCount;
+		}
+		
+		public boolean isSystemError() {
+			return systemError;
+		}
+		public void setSystemError(boolean systemError) {
+			this.systemError = systemError;
 		}
 		public boolean isFindTaxIdsProcessing() {
 			return findTaxIdsProcessing;

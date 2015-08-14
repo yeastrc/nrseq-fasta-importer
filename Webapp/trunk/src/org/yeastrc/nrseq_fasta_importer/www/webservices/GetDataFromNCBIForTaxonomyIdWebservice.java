@@ -14,11 +14,11 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.WebServiceErrorMessageConstants;
-import org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data.GetNCBITaxonomyDataFromNCBIWebservice;
-import org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data.GetNCBITaxonomyDataFromNCBIWebserviceResponse;
-import org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data_dto.NcbiTaxonomyDataRootDTO;
-import org.yeastrc.nrseq_fasta_importer.ncbi_taxonomy_data_dto.NcbiTaxonomyDataTaxonDTO;
 import org.yeastrc.nrseq_fasta_importer.objects.NcbiTaxonomyDataResponse;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.GetNCBITaxonomyDataFromNCBIWebservice;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.GetNCBITaxonomyDataFromNCBIWebserviceResponse;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.webservice_response_dto.NcbiTaxonomyDataRootDTO;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.webservice_response_dto.NcbiTaxonomyDataTaxonDTO;
 
 @Path("/ncbiDataForTaxonomyId")
 public class GetDataFromNCBIForTaxonomyIdWebservice {

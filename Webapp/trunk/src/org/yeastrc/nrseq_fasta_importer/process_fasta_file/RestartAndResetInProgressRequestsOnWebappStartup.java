@@ -1,31 +1,33 @@
-package org.yeastrc.nrseq_fasta_importer.threads;
+package org.yeastrc.nrseq_fasta_importer.process_fasta_file;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
+import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.YRC_NRSEQ_tblDatabaseDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.YRC_NRSEQ_tblProteinDatabaseDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
+import org.yeastrc.nrseq_fasta_importer.threads.ProcessImportFASTAFileThread;
 
 /**
  * 
  *
  */
-public class RestartAndResetInProgressRequestsOnWebappStartupThread extends Thread {
+public class RestartAndResetInProgressRequestsOnWebappStartup {
 
-	private static final Logger log = Logger.getLogger(RestartAndResetInProgressRequestsOnWebappStartupThread.class);
+	private static final Logger log = Logger.getLogger(RestartAndResetInProgressRequestsOnWebappStartup.class);
 
-	private RestartAndResetInProgressRequestsOnWebappStartupThread() { }
-	public static RestartAndResetInProgressRequestsOnWebappStartupThread getInstance() { 
-		return new RestartAndResetInProgressRequestsOnWebappStartupThread(); 
+	private RestartAndResetInProgressRequestsOnWebappStartup() { }
+	public static RestartAndResetInProgressRequestsOnWebappStartup getInstance() { 
+		return new RestartAndResetInProgressRequestsOnWebappStartup(); 
 	}
 
 	/**
 	 * 
 	 */
-	public void run() {
+	public void process() {
 
 
 		FASTAImportTrackingDAO fastaImportTrackingDAO = FASTAImportTrackingDAO.getInstance();
@@ -51,6 +53,8 @@ public class RestartAndResetInProgressRequestsOnWebappStartupThread extends Thre
 						fastaImportTrackingDAO.updateStatus( ImportStatusContants.STATUS_QUEUED_FOR_VALIDATION, item.getId() );
 
 					} else if ( ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED.equals( item.getStatus() ) ) {
+						
+						FASTAHeaderNoTaxIdDeterminedDAO.getInstance().deleteFor_fastaImportTrackingId_getTaxonomyIdsPassNumber( item.getId() /* fastaImportTrackingId */, item.getGetTaxonomyIdsPassNumber() );
 
 						fastaImportTrackingDAO.updateStatus( ImportStatusContants.STATUS_QUEUED_FOR_FIND_TAX_IDS, item.getId() );
 

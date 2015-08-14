@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.yeastrc.nrseq_fasta_importer.constants.GeneralImportErrorConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.GeneralImportErrorDAO;
@@ -19,15 +20,16 @@ import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblDatabaseDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinDatabaseDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinSequenceDTO;
-import org.yeastrc.nrseq_fasta_importer.exception.DuplicateFilenameException;
+import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDuplicateFilenameException;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
-import org.yeastrc.nrseq_fasta_importer.intermediate_import_file.dto.ImportFileEntry;
-import org.yeastrc.nrseq_fasta_importer.intermediate_import_file.dto.ImportFileHeaderEntry;
-import org.yeastrc.nrseq_fasta_importer.intermediate_import_file.writer_reader.ImportFileReader;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileEntry;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileHeaderEntry;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.writer_reader.IntermediateFileReader;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailFailedProcessing;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailImportComplete;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailSystemError;
 import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
+import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
 
 /**
  * 
@@ -75,15 +77,20 @@ public class ImportFASTAFile {
 		
 		YRC_NRSEQ_tblDatabaseDTO yrc_NRSEQ_tblDatabaseDTO = null;
 		
-		ImportFileReader importFileReader = null;
+		IntermediateFileReader importFileReader = null;
 		
 		try {
 			
+			int tempFilenameNumber = fastaImportTrackingDTO.getTempFilenameNumber();
+			
+			String tempFilenameForImport = GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForImport( tempFilenameNumber );
+
+			
 			File tempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
 			
-			File importFile = new File( tempDir, fastaImportTrackingDTO.getTempFilenameForImport() );
+			File importFile = new File( tempDir, tempFilenameForImport );
 			
-			importFileReader = ImportFileReader.getInstance( importFile );
+			importFileReader = IntermediateFileReader.getInstance( importFile );
 			
 			yrc_NRSEQ_tblDatabaseDTO = new YRC_NRSEQ_tblDatabaseDTO();
 			
@@ -100,7 +107,7 @@ public class ImportFASTAFile {
 				
 				if ( exceptionMessage.contains( "Duplicate entry" ) ) {
 					
-					throw new DuplicateFilenameException( "The filename '" + fastaImportTrackingDTO.getFilename() + "' already exists in the database." );
+					throw new FASTAImporterDuplicateFilenameException( "The filename '" + fastaImportTrackingDTO.getFilename() + "' already exists in the database." );
 				}
 				
 				throw e;
@@ -117,12 +124,10 @@ public class ImportFASTAFile {
 			while ( true ) {
 				
 				
-				//  fastaReader.readNext()  throws exception for invalid data format
-				
-				ImportFileEntry importFileEntry = null;
+				IntermediateFileEntry intermediateFileEntry = null;
 				
 				try {
-					importFileEntry = importFileReader.readNext();
+					intermediateFileEntry = importFileReader.readNext();
 					
 					
 				} catch ( Exception e ) {
@@ -132,7 +137,7 @@ public class ImportFASTAFile {
 					throw e;
 				}
 				
-				if ( importFileEntry == null ) { 
+				if ( intermediateFileEntry == null ) { 
 					
 					//  At End Of File
 					
@@ -144,12 +149,12 @@ public class ImportFASTAFile {
 				
 				
 				
-				String sequenceString = importFileEntry.getSequence();
+				String sequenceString = intermediateFileEntry.getSequence();
 
 				if ( sequenceString.length() == 0 ) {
 					
 					log.error( "sequence length == zero for id: " + fastaImportTrackingDTO.getId() 
-							+ ", header line number " + importFileEntry.getHeaderLineNumber() );
+							+ ", header line number " + intermediateFileEntry.getHeaderLineNumber() );
 				}
 				
 				
@@ -157,7 +162,7 @@ public class ImportFASTAFile {
 						YRC_NRSEQ_tblProteinSequenceDAO.getInstance().insertOrRetrieve( sequenceString );
 				
 				
-				List<ImportFileHeaderEntry> importFileHeaderEntryList = importFileEntry.getImportFileHeaderEntryList();
+				List<IntermediateFileHeaderEntry> importFileHeaderEntryList = intermediateFileEntry.getImportFileHeaderEntryList();
 			
 				if ( importFileHeaderEntryList == null ) {
 					
@@ -168,7 +173,7 @@ public class ImportFASTAFile {
 					throw new Exception(msg);
 				}
 				
-				for ( ImportFileHeaderEntry importFileHeaderEntry : importFileHeaderEntryList ) {
+				for ( IntermediateFileHeaderEntry importFileHeaderEntry : importFileHeaderEntryList ) {
 					
 					String headerName = importFileHeaderEntry.getHeaderName();
 					String headerDescription = importFileHeaderEntry.getHeaderDescription();
@@ -226,7 +231,7 @@ public class ImportFASTAFile {
 			}
 			
 
-		} catch ( DuplicateFilenameException e ) {
+		} catch ( FASTAImporterDuplicateFilenameException e ) {
 
 
 			GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
@@ -270,10 +275,12 @@ public class ImportFASTAFile {
 			}
 			
 
+
+
 			GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
 			
 			generalImportErrorDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
-			generalImportErrorDTO.setMessage( e.getMessage() );
+			generalImportErrorDTO.setMessage( GeneralImportErrorConstants.GENERAL_IMPORT_ERROR_MESSAGE_SYSTEM_ERROR );
 			
 			GeneralImportErrorDAO.getInstance().save(generalImportErrorDTO);
 			

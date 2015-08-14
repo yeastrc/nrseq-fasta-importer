@@ -200,6 +200,9 @@
     	</table>
     	
       <div id="single_file_info_block">
+      
+        <input type="hidden" id="prev_item_status" value="">     
+      
            
       	<div id="import_complete_status_block"  style="display: none; margin-top: 15px;">
       	
@@ -252,7 +255,8 @@
     	<div id="no_tax_id_container"  style="display: none;">
     	
     	  <div style="margin-bottom: 10px;">
-    		Unable to determine the taxonomy id for the following headers in the file:  
+    		Unable to determine the taxonomy id for the following headers in the file.
+    		Taxonomy ids are required for all the headers listed before the file can be imported.  
     	  </div>
 
 		  <div   id="no_tax_id_loading" >

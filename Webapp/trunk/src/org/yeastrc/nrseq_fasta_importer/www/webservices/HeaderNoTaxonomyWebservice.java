@@ -3,7 +3,9 @@ package org.yeastrc.nrseq_fasta_importer.www.webservices;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -16,6 +18,10 @@ import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.WebServiceErrorMessageConstants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedDTO;
+import org.yeastrc.nrseq_fasta_importer.objects.GenericWebserviceResponse;
+import org.yeastrc.nrseq_fasta_importer.objects.UserProvidedTaxonomyId;
+
+
 
 @Path("/headerNoTaxonomy")
 public class HeaderNoTaxonomyWebservice {
@@ -68,6 +74,46 @@ public class HeaderNoTaxonomyWebservice {
 		
 	}
 	
+
+	@POST
+	@Consumes( MediaType.APPLICATION_JSON )
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/update")
+	public GenericWebserviceResponse save( UserProvidedTaxonomyId userProvidedTaxonomyId,
+			@Context HttpServletRequest request ) throws Exception {
+
+
+//		if (true)
+//		throw new Exception("Forced Error");
+		
+		GenericWebserviceResponse genericWebserviceResponse = new GenericWebserviceResponse();
+		
+		try {
+			
+			FASTAHeaderNoTaxIdDeterminedDAO.getInstance().update_userAssignedTaxId( userProvidedTaxonomyId );
+			
+		} catch ( WebApplicationException e ) {
+
+			throw e;
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Exception caught: " + e.toString();
+			
+			log.error( msg, e );
+			
+			throw new WebApplicationException(
+					Response.status( WebServiceErrorMessageConstants.INTERNAL_SERVER_ERROR_STATUS_CODE )  //  Send HTTP code
+					.entity( WebServiceErrorMessageConstants.INTERNAL_SERVER_ERROR_TEXT ) // This string will be passed to the client
+					.build()
+					);
+		}
+		
+		genericWebserviceResponse.setStatus(true);
+		
+		return genericWebserviceResponse;
+		
+	}
 	
 
 }

@@ -9,12 +9,14 @@ public class FASTAHeaderNoTaxIdDeterminedDTO {
 
 	private int id;
 	private int fastaImportTrackingId;
+	private int getTaxonomyIdsPassNumber;
 	private String headerName;
 	private String headerDescription;
 	private String headerLine;
 	private int headerLineNumber;
 	private String message;
 	private Integer userAssignedTaxId;
+	
 	
 	
 	public int getId() {
@@ -28,6 +30,12 @@ public class FASTAHeaderNoTaxIdDeterminedDTO {
 	}
 	public void setFastaImportTrackingId(int fastaImportTrackingId) {
 		this.fastaImportTrackingId = fastaImportTrackingId;
+	}
+	public int getGetTaxonomyIdsPassNumber() {
+		return getTaxonomyIdsPassNumber;
+	}
+	public void setGetTaxonomyIdsPassNumber(int getTaxonomyIdsPassNumber) {
+		this.getTaxonomyIdsPassNumber = getTaxonomyIdsPassNumber;
 	}
 	public String getHeaderName() {
 		return headerName;
@@ -65,7 +73,7 @@ public class FASTAHeaderNoTaxIdDeterminedDTO {
 	public void setUserAssignedTaxId(Integer userAssignedTaxId) {
 		this.userAssignedTaxId = userAssignedTaxId;
 	}
-
+	
 
 
 }
@@ -74,11 +82,11 @@ public class FASTAHeaderNoTaxIdDeterminedDTO {
 //
 //	  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 //	  fasta_import_tracking_id INT UNSIGNED NOT NULL,
+//	  get_taxonomy_ids_pass_number INT NOT NULL,
 //	  header_name VARCHAR(600) NOT NULL,
 //	  header_description VARCHAR(3000) NULL,
 //	  header_line VARCHAR(6000) NULL,
 //	  header_line_number INT NULL,
 //	  message VARCHAR(3000) NULL,
 //	  user_assigned_tax_id INT NULL,
-	
 	

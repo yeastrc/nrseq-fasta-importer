@@ -23,6 +23,9 @@ public class DBConnectionFactory {
 	public static final String NRSEQ_FASTA_IMPORTER = "NRSEQ_FASTA_IMPORTER";
 	public static final String YRC_NRSEQ = "YRC_NRSEQ";
 
+	// TODO  TEMP
+	public static final String YRC = "yrc";
+
 		
 	/**
 	 * Get a connection to the specified database.

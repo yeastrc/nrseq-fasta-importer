@@ -17,12 +17,13 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.FileUploadConstants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
+import org.yeastrc.nrseq_fasta_importer.dao.TempUploadFileIdCreatorDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.YRC_NRSEQ_tblDatabaseDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
 import org.yeastrc.nrseq_fasta_importer.objects.ImportFASTAServletResponse;
 import org.yeastrc.nrseq_fasta_importer.threads.ProcessImportFASTAFileThread;
 import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFileForUploadedFile;
+import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
 import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFileForUploadedFileResult;
 import org.yeastrc.nrseq_fasta_importer.utils.SHA1SumCalculator;
 
@@ -219,15 +220,17 @@ public class UploadFASTAFileServlet extends HttpServlet {
 					log.info( "item.getSize(): " + item.getSize() );
 
 					
+					
+					int tempFilenameNumber = TempUploadFileIdCreatorDAO.getInstance().getNextId();
 							
-					GetTempLocalFileForUploadedFileResult getTempLocalFileForUploadedFileResult =
-							GetTempLocalFileForUploadedFile.getInstance().getTempLocalFileForUploadedFile(  );
+					String tempFilename =
+							GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForUploadedFile( tempFilenameNumber );
 
 					
 					File tempDir = GetTempDirForFileUploads .getInstance().getTempDirForFileUploads();
 					
 
-					File uploadedFileOnDisk = new File( tempDir, getTempLocalFileForUploadedFileResult.getTempFilename() );
+					File uploadedFileOnDisk = new File( tempDir, tempFilename );
 					
 					
 					item.write( uploadedFileOnDisk );
@@ -239,8 +242,7 @@ public class UploadFASTAFileServlet extends HttpServlet {
 					fastaImportTrackingDTO = new FASTAImportTrackingDTO();
 					
 					fastaImportTrackingDTO.setFilename( fileName );
-					fastaImportTrackingDTO.setTempFilename( uploadedFileOnDisk.getName() );
-					fastaImportTrackingDTO.setTempFilenameForImport( getTempLocalFileForUploadedFileResult.getTempFilenameForImport() );
+					fastaImportTrackingDTO.setTempFilenameNumber( tempFilenameNumber );
 					fastaImportTrackingDTO.setSha1sum( uploadedFileSha1sum );
 					fastaImportTrackingDTO.setInsertRequestURL( requestURL );
 					

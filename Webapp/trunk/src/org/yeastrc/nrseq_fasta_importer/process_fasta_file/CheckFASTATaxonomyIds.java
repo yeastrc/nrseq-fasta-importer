@@ -3,14 +3,10 @@ package org.yeastrc.nrseq_fasta_importer.process_fasta_file;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.yeastrc.fasta.FASTADataErrorException;
-import org.yeastrc.fasta.FASTAEntry;
-import org.yeastrc.fasta.FASTAHeader;
-import org.yeastrc.fasta.FASTAReader;
+import org.yeastrc.nrseq_fasta_importer.constants.GeneralImportErrorConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.constants.TaxonomyIdNotFoundMaxCountConstants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedDAO;
@@ -20,16 +16,19 @@ import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.GeneralImportErrorDTO;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
-import org.yeastrc.nrseq_fasta_importer.intermediate_import_file.dto.ImportFileEntry;
-import org.yeastrc.nrseq_fasta_importer.intermediate_import_file.dto.ImportFileHeaderEntry;
-import org.yeastrc.nrseq_fasta_importer.intermediate_import_file.writer_reader.ImportFileWriter;
+import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterRemoteWebserviceCallErrorException;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileEntry;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileHeaderEntry;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.writer_reader.IntermediateFileReader;
+import org.yeastrc.nrseq_fasta_importer.intermediate_file.writer_reader.IntermediateFileWriter;
+import org.yeastrc.nrseq_fasta_importer.objects.FASTAHeaderImporterCopy;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailFailedProcessing;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailSystemError;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailUserAttentionRequired;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyId;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdResult;
 import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
-import org.yeastrc.nrseq_fasta_importer.utils.FASTAValidator;
+import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
 
 /**
  * Get Taxonomy Ids for all FASTA headers
@@ -43,354 +42,402 @@ public class CheckFASTATaxonomyIds {
 	public static CheckFASTATaxonomyIds getInstance() { 
 		return new CheckFASTATaxonomyIds(); 
 	}
-	
-	
-	
+
+
+
 	private volatile int currentSequenceCount;
 
 	public int getCurrentSequenceCount() {
 		return currentSequenceCount;
 	}
-	
-	
-	
+
+
+
 
 	/**
 	 * @param fastaImportTrackingDTO
 	 * @throws Exception 
 	 */
 	public CheckFASTATaxonomyIdsResult checkFASTATaxonomyIds( FASTAImportTrackingDTO fastaImportTrackingDTO ) throws FASTAImporterDataErrorException, Exception {
-		
+
 		if ( log.isInfoEnabled() ) {
-			
+
 			log.info( "Starting Checking FASTA Taxonomy Ids, request id: " + fastaImportTrackingDTO.getId() + ", uploaded file: " + fastaImportTrackingDTO.getFilename() );
 		}
-		
+
 		CheckFASTATaxonomyIdsResult checkFASTATaxonomyIdsResult = new CheckFASTATaxonomyIdsResult();
-		
+
 		boolean headerMatchesNotFound = false;
-		
+
 		int taxonomyIdNotFoundMaxCount = 0;
-		
-		
+
+
 		String newStatus = ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED;
 
 		fastaImportTrackingDTO.setStatus( newStatus );
+
+//		FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
+
+		Integer getTaxonomyIdsPassNumber =
+				FASTAImportTrackingDAO.getInstance().updateStatusIncrementGetTaxonomyIdsPassNumber( newStatus, fastaImportTrackingDTO.getId() );
 		
-		FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
+		if ( getTaxonomyIdsPassNumber == null ) {
+			
+			String msg = "updateStatusIncrementGetTaxonomyIdsPassNumber did not return a value for "
+					+ "getTaxonomyIdsPassNumber.";
+			
+			log.error( msg );
+			
+			throw new Exception( msg );
+		}
 		
-		FASTAReader fastaReader = null;
-		
-		ImportFileWriter importFileWriter = null;
-		
+		fastaImportTrackingDTO.setGetTaxonomyIdsPassNumber( getTaxonomyIdsPassNumber );
+
 		try {
-			
-			File tempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
-			
-			File fastaFile = new File( tempDir, fastaImportTrackingDTO.getTempFilename() );
-			
-			File importFile = new File( tempDir, fastaImportTrackingDTO.getTempFilenameForImport() );
-			
-			fastaReader = FASTAReader.getInstance( fastaFile );
-			
-			importFileWriter = ImportFileWriter.getInstance( importFile );
-			
-			
-			while ( true ) {
-				
-				
-				//  fastaReader.readNext()  throws exception for invalid data format
-				
-				FASTAEntry fastaEntry = null;
-				
-				try {
-					fastaEntry = fastaReader.readNext();
-					
-				} catch ( FASTADataErrorException e ) {
-					
-					throw e;
-					
-				} catch ( Exception e ) {
-					
-//					log.error( "Exception", e );
-					
-					throw e;
-				}
-				
-				if ( fastaEntry == null ) { 
-					
-					//  At End Of File
-					
-					break;  //  EARLY EXIT of LOOP
-				}
-				
-				
-				currentSequenceCount++;
-				
-			
-				// the headers for this entry
-				Set<FASTAHeader> headers = fastaEntry.getHeaders();
-				
-				StringBuffer sequence = fastaEntry.getSequence();
-
-				if ( sequence.length() == 0 ) {
 
 
-					String msg = "sequence length == zero for id: " + fastaImportTrackingDTO.getId() 
-							+ ", header line number " + fastaEntry.getHeaderLineNumber();
+			
+			IntermediateFileReader intermediateFileReader = null;
+			
+			IntermediateFileWriter importFileWriter = null;
 
-					log.error( msg );
-					throw new FASTAImporterDataErrorException( msg );
-				}
-				
-				String sequenceString = sequence.toString();
-				
+			try {
 
-				if ( ! FASTAValidator.validProteinSequence( sequenceString ) ) {
+				File tempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
 
-					String msg = "Invalid protein sequence"
-							+ "for header line number " + fastaEntry.getHeaderLineNumber()
-							+ ", sequence: " + sequenceString;
+				int tempFilenameNumber = fastaImportTrackingDTO.getTempFilenameNumber();
 
-					log.error( msg );
+				String tempFilenameForGetTaxonomyIdsProcessingString = 
+						GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForGetTaxonomyIdsProcessing( tempFilenameNumber );
 
-					throw new FASTAImporterDataErrorException( msg );
-				}
-				
-				
-				ImportFileEntry importFileEntry = new ImportFileEntry();
-				
-				importFileEntry.setHeaderLineNumber( fastaEntry.getHeaderLineNumber() );
-				importFileEntry.setSequence( sequenceString );
-				
-				List<ImportFileHeaderEntry> importFileHeaderEntryList = new ArrayList<>();
-				
-				importFileEntry.setImportFileHeaderEntryList( importFileHeaderEntryList );
-				
-				for ( FASTAHeader header : headers ) {
-					
-					String headerName = header.getName();
-					String headerDescription = header.getDescription();
+				String tempFilenameForImport = GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForImport( tempFilenameNumber );
+
+
+				File tempFilenameForGetTaxonomyIdsProcessingFile = new File( tempDir, tempFilenameForGetTaxonomyIdsProcessingString );
+
+				File importFile = new File( tempDir, tempFilenameForImport );
+
+				intermediateFileReader = IntermediateFileReader.getInstance( tempFilenameForGetTaxonomyIdsProcessingFile );
+
+				importFileWriter = IntermediateFileWriter.getInstance( importFile );
+
+
+				while ( true ) {
+
+
+					IntermediateFileEntry intermediateFileEntry = null;
 					
 					try {
+						intermediateFileEntry = intermediateFileReader.readNext();
+						
+						
+					} catch ( Exception e ) {
+						
+//						log.error( "Exception", e );
+						
+						throw e;
+					}
+					
+					if ( intermediateFileEntry == null ) { 
+						
+						//  At End Of File
+						
+						break;  //  EARLY EXIT of LOOP
+					}
+					
 
-						//  taxonomyId which is the speciesID field in the tblProteinTable
-						DetermineTaxonomyIdResult determineTaxonomyIdResult = 
-								DetermineTaxonomyId.getInstance().getTaxonomyId( header, fastaEntry, fastaImportTrackingDTO );
+					currentSequenceCount++;
 
-						Integer taxonomyId = determineTaxonomyIdResult.getTaxonomyId();
 
-						if ( taxonomyId == null ) {
+					List<IntermediateFileHeaderEntry> intermediateFileHeaderEntryList = intermediateFileEntry.getImportFileHeaderEntryList();
+				
+					if ( intermediateFileHeaderEntryList == null ) {
+						
+						String msg = "Error: intermediateFileHeaderEntryList == null.  fastaImportTrackingDTO.id: " + fastaImportTrackingDTO.getId();
+						
+						log.error( msg );
+						
+						throw new Exception(msg);
+					}
+
+					
+					IntermediateFileEntry importFileEntry = new IntermediateFileEntry();
+
+					importFileEntry.setHeaderLineNumber( intermediateFileEntry.getHeaderLineNumber() );
+					importFileEntry.setSequence( intermediateFileEntry.getSequence() );
+
+					List<IntermediateFileHeaderEntry> importFileHeaderEntryList = new ArrayList<>();
+
+					importFileEntry.setImportFileHeaderEntryList( importFileHeaderEntryList );
+
+					
+					for ( IntermediateFileHeaderEntry intermediateFileHeaderEntry : intermediateFileHeaderEntryList ) {
+						
+						String headerFullString = intermediateFileHeaderEntry.getHeaderFullString();
+						String headerName = intermediateFileHeaderEntry.getHeaderName();
+						String headerDescription = intermediateFileHeaderEntry.getHeaderDescription();
+						
+						
+
+						//  Update headerName in the fastaHeaderImporterCopy object to remove contamin
+						//  The headerName in the fastaHeaderImporterCopy is not what is saved to the YRC_NRSEQ database
+						//  The headerName in the variable headerName is what is saved to the YRC_NRSEQ database
+
+						String headerNameForGettingTaxonomyId = headerName;
+						String headerFullStringForGettingTaxonomyId = headerFullString;
+						
+						// if header start with "contaminant_" strip it off
+						
+						final String CONTAMINANT_PREFIX = "contaminant_";
+						
+						if (headerNameForGettingTaxonomyId.startsWith( CONTAMINANT_PREFIX )) {
+							headerNameForGettingTaxonomyId = headerNameForGettingTaxonomyId.substring( CONTAMINANT_PREFIX.length(), headerNameForGettingTaxonomyId.length() );
+						}
+						
+						
+						if (headerFullStringForGettingTaxonomyId.startsWith( CONTAMINANT_PREFIX )) {
+							headerFullStringForGettingTaxonomyId = headerFullStringForGettingTaxonomyId.substring( CONTAMINANT_PREFIX.length(), headerFullStringForGettingTaxonomyId.length() );
+						}
+
+
+						FASTAHeaderImporterCopy fastaHeaderImporterCopy = new FASTAHeaderImporterCopy();
+
+						fastaHeaderImporterCopy.setLine( headerFullString );
+						fastaHeaderImporterCopy.setName( headerNameForGettingTaxonomyId );
+						fastaHeaderImporterCopy.setDescription( headerDescription );
+
+
+						try {
 							
-							taxonomyIdNotFoundMaxCount++;
-							
-							if ( taxonomyIdNotFoundMaxCount > TaxonomyIdNotFoundMaxCountConstants.MAX_TAXONOMY_NOT_FOUND ) {
-								
-								String msg = "Number of headers with taxonomy id not found has exceeded " 
-										+ TaxonomyIdNotFoundMaxCountConstants.MAX_TAXONOMY_NOT_FOUND
-										+ ".  The file requires manual processing to handle identifying the taxonomy ids.";
-								
-								log.error( msg );
-								
-								throw new FASTAImporterDataErrorException( msg );
-								
+							//  taxonomyId which is the speciesID field in the tblProteinTable
+							DetermineTaxonomyIdResult determineTaxonomyIdResult = 
+									DetermineTaxonomyId.getInstance().getTaxonomyId( fastaHeaderImporterCopy, fastaImportTrackingDTO );
+
+							Integer taxonomyId = determineTaxonomyIdResult.getTaxonomyId();
+
+							if ( taxonomyId == null ) {
+
+								taxonomyIdNotFoundMaxCount++;
+
+								if ( taxonomyIdNotFoundMaxCount > TaxonomyIdNotFoundMaxCountConstants.MAX_TAXONOMY_NOT_FOUND ) {
+
+									String msg = "Number of headers with taxonomy id not found has exceeded " 
+											+ TaxonomyIdNotFoundMaxCountConstants.MAX_TAXONOMY_NOT_FOUND
+											+ ".  The file requires manual processing to handle identifying the taxonomy ids.";
+
+									log.error( msg );
+
+									throw new FASTAImporterDataErrorException( msg );
+
+								}
+
+								//  If not able to find taxonomy id for a header,
+
+								FASTAHeaderNoTaxIdDeterminedDTO fastaHeaderNoTaxIdDeterminedDTO = new FASTAHeaderNoTaxIdDeterminedDTO();
+
+								fastaHeaderNoTaxIdDeterminedDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
+								fastaHeaderNoTaxIdDeterminedDTO.setGetTaxonomyIdsPassNumber( fastaImportTrackingDTO.getGetTaxonomyIdsPassNumber() );
+								fastaHeaderNoTaxIdDeterminedDTO.setHeaderName( headerName );
+								fastaHeaderNoTaxIdDeterminedDTO.setHeaderDescription( headerDescription );
+								fastaHeaderNoTaxIdDeterminedDTO.setHeaderLine( headerFullString );
+								fastaHeaderNoTaxIdDeterminedDTO.setHeaderLineNumber( intermediateFileEntry.getHeaderLineNumber() );
+								fastaHeaderNoTaxIdDeterminedDTO.setMessage( determineTaxonomyIdResult.getMessage() );
+
+								FASTAHeaderNoTaxIdDeterminedDAO.getInstance().save( fastaHeaderNoTaxIdDeterminedDTO );
+
+
+								headerMatchesNotFound = true;
+
+							} else {
+
+
+								//  Assume good Taxonomy id
+
+								IntermediateFileHeaderEntry importFileHeaderEntry = new IntermediateFileHeaderEntry();
+
+								importFileHeaderEntry.setHeaderName( headerName );
+								importFileHeaderEntry.setHeaderDescription( headerDescription );
+								importFileHeaderEntry.setTaxonomyId( taxonomyId );
+
+								importFileHeaderEntryList.add(importFileHeaderEntry);
+
 							}
 
-							//  If not able to find taxonomy id for a header,
-							
-							FASTAHeaderNoTaxIdDeterminedDTO fastaHeaderNoTaxIdDeterminedDTO = new FASTAHeaderNoTaxIdDeterminedDTO();
-							
-							fastaHeaderNoTaxIdDeterminedDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
-							fastaHeaderNoTaxIdDeterminedDTO.setHeaderName( headerName );
-							fastaHeaderNoTaxIdDeterminedDTO.setHeaderDescription( headerDescription );
-							fastaHeaderNoTaxIdDeterminedDTO.setHeaderLine( header.getLine() );
-							fastaHeaderNoTaxIdDeterminedDTO.setHeaderLineNumber( fastaEntry.getHeaderLineNumber() );
-							fastaHeaderNoTaxIdDeterminedDTO.setMessage( determineTaxonomyIdResult.getMessage() );
-							
-							FASTAHeaderNoTaxIdDeterminedDAO.getInstance().save( fastaHeaderNoTaxIdDeterminedDTO );
-							
-							
-							
-							headerMatchesNotFound = true;
-							
-						} else {
+						} catch ( FASTAImporterDataErrorException dataException ) {
 
-
-							//  Assume good Taxonomy id
-
-							ImportFileHeaderEntry importFileHeaderEntry = new ImportFileHeaderEntry();
-
-							importFileHeaderEntry.setHeaderName( headerName );
-							importFileHeaderEntry.setHeaderDescription( headerDescription );
-							importFileHeaderEntry.setTaxonomyId( taxonomyId );
-
-							importFileHeaderEntryList.add(importFileHeaderEntry);
-
+							throw dataException;
 						}
-					
-					} catch ( FASTAImporterDataErrorException dataException ) {
-						
-						throw dataException;
+
 					}
-				
+
+
+					importFileWriter.insertToFile( importFileEntry );
+
 				}
-				
-				
-				importFileWriter.add( importFileEntry );
-				
+
+			} finally {
+
+				if ( intermediateFileReader != null ) {
+
+					try {
+
+						intermediateFileReader.close();
+					} catch ( Exception e ) {
+
+						log.error( "Exception closing intermediateFileReader", e );
+					}
+				}
+
+
+				if ( importFileWriter != null ) {
+
+					try {
+
+						importFileWriter.close();
+					} catch ( Exception e ) {
+
+
+						newStatus = ImportStatusContants.STATUS_SYSTEM_ERROR_PROCESSING_FAILED;
+
+						fastaImportTrackingDTO.setStatus( newStatus );
+
+						FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
+
+						log.error( "Exception closing importFileWriter file", e );
+
+						if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
+
+							SendEmailSystemError.getInstance().sendEmailSystemError( fastaImportTrackingDTO );
+						}
+
+						throw e;
+					}
+				}
+
 			}
-			
+
+
 
 			if ( headerMatchesNotFound ) {
-				
+
 				newStatus = ImportStatusContants.STATUS_USER_INPUT_REQUIRED;
 
 				fastaImportTrackingDTO.setStatus( newStatus );
-				
+
 				FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
-				
+
 				if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
 
 					SendEmailUserAttentionRequired.getInstance().sendEmailUserAttentionRequired( fastaImportTrackingDTO );
 				}
-				
-				
+
+
 			} else {
-				
+
 				//   No data errors requiring user input so import the file
-				
+
 				newStatus = ImportStatusContants.STATUS_QUEUED_FOR_IMPORT;
 
 				fastaImportTrackingDTO.setStatus( newStatus );
-				
+
 				FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
 			}
-			
-			
-		} catch ( FASTADataErrorException e ) {
-			
-
-			GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
-			
-			generalImportErrorDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
-			generalImportErrorDTO.setMessage( e.getMessage() );
-			
-			GeneralImportErrorDAO.getInstance().save(generalImportErrorDTO);
-			
-
-			newStatus = ImportStatusContants.STATUS_FIND_TAX_IDS_FAILED;
-
-			fastaImportTrackingDTO.setStatus( newStatus );
-			
-			FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
-			
-			log.error( "Data Exception", e );
-			
-			if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
-			
-				SendEmailFailedProcessing.getInstance().sendEmailFailedProcessing( fastaImportTrackingDTO, generalImportErrorDTO );
-			}
-			
-			throw new FASTAImporterDataErrorException( e.getMessage() );
 
 		} catch ( FASTAImporterDataErrorException e ) {
-			
+
 
 			GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
-			
+
 			generalImportErrorDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
 			generalImportErrorDTO.setMessage( e.getMessage() );
-			
+
 			GeneralImportErrorDAO.getInstance().save(generalImportErrorDTO);
-			
-			
+
+
 			newStatus = ImportStatusContants.STATUS_FIND_TAX_IDS_FAILED;
 
 			fastaImportTrackingDTO.setStatus( newStatus );
-			
+
 			FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
-			
+
 			if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
 
 				SendEmailFailedProcessing.getInstance().sendEmailFailedProcessing( fastaImportTrackingDTO, generalImportErrorDTO );
 			}
-			
+
 			throw e;
 			
+
+		} catch ( FASTAImporterRemoteWebserviceCallErrorException e ) {
+
+
+			GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
+
+			generalImportErrorDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
+			generalImportErrorDTO.setMessage( e.getMessage() );
+
+			GeneralImportErrorDAO.getInstance().save(generalImportErrorDTO);
+
+
+			newStatus = ImportStatusContants.STATUS_FIND_TAX_IDS_FAILED;
+
+			fastaImportTrackingDTO.setStatus( newStatus );
+
+			FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
+
+			if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
+
+				SendEmailFailedProcessing.getInstance().sendEmailFailedProcessing( fastaImportTrackingDTO, generalImportErrorDTO );
+			}
+
+			throw e;
+
 		} catch ( Exception e ) {
+
+
+			GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
+			
+			generalImportErrorDTO.setFastaImportTrackingId( fastaImportTrackingDTO.getId() );
+			generalImportErrorDTO.setMessage( GeneralImportErrorConstants.GENERAL_IMPORT_ERROR_MESSAGE_SYSTEM_ERROR );
+			
+			GeneralImportErrorDAO.getInstance().save(generalImportErrorDTO);
 			
 			
+
 			newStatus = ImportStatusContants.STATUS_SYSTEM_ERROR_PROCESSING_FAILED;
 
 			fastaImportTrackingDTO.setStatus( newStatus );
-			
+
 			FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
-			
+
 			log.error( "Exception", e );
-			
-			
+
+
 			if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
 
 				SendEmailSystemError.getInstance().sendEmailSystemError( fastaImportTrackingDTO );
 			}
-			
+
 			throw e;
-		
+
 		} finally {
-			
-			if ( fastaReader != null ) {
-				
-				try {
-					
-					fastaReader.close();
-				} catch ( Exception e ) {
-
-					log.error( "Exception closing fasta file", e );
-				}
-			}
-			
-			
-			if ( importFileWriter != null ) {
-				
-				try {
-					
-					importFileWriter.close();
-				} catch ( Exception e ) {
 
 
-					newStatus = ImportStatusContants.STATUS_SYSTEM_ERROR_PROCESSING_FAILED;
-
-					fastaImportTrackingDTO.setStatus( newStatus );
-					
-					FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );
-					
-					log.error( "Exception closing importFileWriter file", e );
-					
-					if ( StringUtils.isNotEmpty( fastaImportTrackingDTO.getEmail() ) ) {
-
-						SendEmailSystemError.getInstance().sendEmailSystemError( fastaImportTrackingDTO );
-					}
-					
-					throw e;
-				}
-			}
-			
 		}
-		
-		
+
 		if ( log.isInfoEnabled() ) {
-			
+
 			log.info( "Finished Checking FASTA Taxonomy Ids, request id: " + fastaImportTrackingDTO.getId() + ", uploaded file: " + fastaImportTrackingDTO.getFilename() );
 		}
-		
-		
+
+
 		checkFASTATaxonomyIdsResult.setHeaderMatchesNotFound( headerMatchesNotFound );
-		
+
 
 		return checkFASTATaxonomyIdsResult;
 	}
-	
-	
-			
-			
+
+
+
+
 }

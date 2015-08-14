@@ -11,7 +11,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.db.DBConnectionFactory;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedDTO;
-import org.yeastrc.nrseq_fasta_importer.objects.UserProvidedTaxonomyIds;
+import org.yeastrc.nrseq_fasta_importer.objects.UserProvidedTaxonomyId;
 
 /**
  * 
@@ -385,6 +385,7 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 		returnItem.setId( rs.getInt( "id" ) );
 		
 		returnItem.setFastaImportTrackingId( rs.getInt( "fasta_import_tracking_id" ) );
+		returnItem.setGetTaxonomyIdsPassNumber( rs.getInt( "get_taxonomy_ids_pass_number" ) );
 		returnItem.setHeaderName( rs.getString( "header_name" ) );
 		returnItem.setHeaderDescription( rs.getString( "header_description" ) );
 		returnItem.setHeaderLine( rs.getString( "header_line" ) );
@@ -410,6 +411,7 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 	//
 //		  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 //		  fasta_import_tracking_id INT UNSIGNED NOT NULL,
+//		  get_taxonomy_ids_pass_number INT NOT NULL,
 //		  header_name VARCHAR(600) NOT NULL,
 //		  header_description VARCHAR(3000) NULL,
 //		  header_line VARCHAR(6000) NULL,
@@ -458,6 +460,7 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 		//
 //			  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 //			  fasta_import_tracking_id INT UNSIGNED NOT NULL,
+//			  get_taxonomy_ids_pass_number INT NOT NULL,
 //			  header_name VARCHAR(600) NOT NULL,
 //			  header_description VARCHAR(3000) NULL,
 //			  header_line VARCHAR(6000) NULL,
@@ -466,10 +469,11 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 //			  user_assigned_tax_id INT NULL,
 			
 			
+			
 
 		final String sql = "INSERT INTO fasta_header_no_tax_id_determined "
-				+ "(fasta_import_tracking_id, header_name, header_description, header_line, header_line_number, message, user_assigned_tax_id )" +
-				" VALUES ( ?, ?, ?, ?, ?, ?, ? )";
+				+ "(fasta_import_tracking_id, get_taxonomy_ids_pass_number, header_name, header_description, header_line, header_line_number, message, user_assigned_tax_id )" +
+				" VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )";
 
 		try {
 			
@@ -479,7 +483,9 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 			int counter = 0;
 			
 			counter++;
-			pstmt.setInt( counter, item.getFastaImportTrackingId());
+			pstmt.setInt( counter, item.getFastaImportTrackingId() );
+			counter++;
+			pstmt.setInt( counter, item.getGetTaxonomyIdsPassNumber() );
 			counter++;
 			pstmt.setString( counter, item.getHeaderName() );
 			counter++;
@@ -518,7 +524,9 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 			
 		} catch ( Exception e ) {
 			
-			String msg = "Failed to insert FASTAHeaderNoTaxIdDeterminedDTO, sql: " + sql;
+			String msg = "Failed to insert FASTAHeaderNoTaxIdDeterminedDTO,"
+					+ "FASTAHeaderNoTaxIdDeterminedDTO item: " + item.toString()
+					+ "\n sql: " + sql;
 			
 			log.error( msg, e );
 			
@@ -543,13 +551,100 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 		
 	}
 	
+
 	
 	/**
 	 * @param userAssignedTaxId
 	 * @param id
 	 * @throws Exception
 	 */
-	public void update_userAssignedTaxId( List<UserProvidedTaxonomyIds> userProvidedTaxonomyIds ) throws Exception {
+	public void update_userAssignedTaxId( UserProvidedTaxonomyId userProvidedTaxonomyId ) throws Exception {
+		
+		Connection dbConnection = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+
+		final String sql = "UPDATE fasta_header_no_tax_id_determined SET user_assigned_tax_id = ? WHERE id = ?";
+
+		
+		try {
+			
+			dbConnection = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+			
+
+//			  CREATE TABLE fasta_header_no_tax_id_determined (
+			//
+//				  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+//				  fasta_import_tracking_id INT UNSIGNED NOT NULL,
+//				  get_taxonomy_ids_pass_number INT NOT NULL,
+//				  header_name VARCHAR(600) NOT NULL,
+//				  header_description VARCHAR(3000) NULL,
+//				  header_line VARCHAR(6000) NULL,
+//				  header_line_number INT NULL,
+//				  message VARCHAR(3000) NULL,
+//				  user_assigned_tax_id INT NULL,
+				
+				
+			
+			pstmt = dbConnection.prepareStatement( sql );
+
+			int counter = 0;
+
+			counter++;
+
+			if ( userProvidedTaxonomyId.getTaxonomyId() != null ) {
+				pstmt.setInt( counter, userProvidedTaxonomyId.getTaxonomyId() );
+			} else {
+				pstmt.setNull( counter, java.sql.Types.INTEGER );
+			}
+			
+			
+			counter++;
+			pstmt.setInt( counter, userProvidedTaxonomyId.getNoTaxonomyIdRecordId() );
+			
+			
+			pstmt.executeUpdate();
+
+			
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Failed to update user_assigned_tax_id, sql: " + sql;
+			
+			log.error( msg, e );
+			
+			throw e;
+			
+		} finally {
+
+			// be sure database handles are closed
+			if( rs != null ) {
+				try { rs.close(); } catch( Throwable t ) { ; }
+				rs = null;
+			}
+
+			if( pstmt != null ) {
+				try { pstmt.close(); } catch( Throwable t ) { ; }
+				pstmt = null;
+			}
+
+
+			if( dbConnection != null ) {
+				try { dbConnection.close(); } catch( Throwable t ) { ; }
+				dbConnection = null;
+			}
+		}
+	}
+	
+	
+	
+	
+	/**
+	 * @param userProvidedTaxonomyIds
+	 * @param id
+	 * @throws Exception
+	 */
+	public void update_userAssignedTaxIdForList( List<UserProvidedTaxonomyId> userProvidedTaxonomyIds ) throws Exception {
 		
 		Connection dbConnection = null;
 		PreparedStatement pstmt = null;
@@ -569,6 +664,7 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 			//
 //				  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 //				  fasta_import_tracking_id INT UNSIGNED NOT NULL,
+//				  get_taxonomy_ids_pass_number INT NOT NULL,
 //				  header_name VARCHAR(600) NOT NULL,
 //				  header_description VARCHAR(3000) NULL,
 //				  header_line VARCHAR(6000) NULL,
@@ -580,15 +676,20 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 			
 			pstmt = dbConnection.prepareStatement( sql );
 			
-			for ( UserProvidedTaxonomyIds item : userProvidedTaxonomyIds ) {
+			for ( UserProvidedTaxonomyId item : userProvidedTaxonomyIds ) {
 			
 			
 				int counter = 0;
 
 
 				counter++;
-				pstmt.setInt( counter, item.getTaxonomyId() );
 
+				if ( item.getTaxonomyId() != null ) {
+					pstmt.setInt( counter, item.getTaxonomyId() );
+				} else {
+					pstmt.setNull( counter, java.sql.Types.INTEGER );
+				}
+				
 				counter++;
 				pstmt.setInt( counter, item.getNoTaxonomyIdRecordId() );
 
@@ -653,6 +754,84 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 		}
 	}
 	
+	
+	
+
+	/**
+	 * @param fastaImportTrackingId
+	 * @param getTaxonomyIdsPassNumber
+	 * @throws Exception
+	 */
+	public void deleteFor_fastaImportTrackingId_getTaxonomyIdsPassNumber( int fastaImportTrackingId, int getTaxonomyIdsPassNumber ) throws Exception {
+		
+		Connection dbConnection = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+
+		final String sql = "DELETE FROM fasta_header_no_tax_id_determined WHERE fasta_import_tracking_id = ? AND get_taxonomy_ids_pass_number = ?";
+
+		
+		try {
+			
+			dbConnection = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+			
+//			  CREATE TABLE fasta_header_no_tax_id_determined (
+			//
+//				  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+//				  fasta_import_tracking_id INT UNSIGNED NOT NULL,
+//				  get_taxonomy_ids_pass_number INT NOT NULL,
+//				  header_name VARCHAR(600) NOT NULL,
+//				  header_description VARCHAR(3000) NULL,
+//				  header_line VARCHAR(6000) NULL,
+//				  header_line_number INT NULL,
+//				  message VARCHAR(3000) NULL,
+//				  user_assigned_tax_id INT NULL,
+				
+				
+			
+			pstmt = dbConnection.prepareStatement( sql );
+
+			int counter = 0;
+			
+			counter++;
+			pstmt.setInt( counter, fastaImportTrackingId );
+			
+			counter++;
+			pstmt.setInt( counter, getTaxonomyIdsPassNumber );
+			
+			
+			pstmt.executeUpdate();
+
+			
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Failed to deleteFor_fastaImportTrackingId_getTaxonomyIdsPassNumber, sql: " + sql;
+			
+			log.error( msg, e );
+			
+			throw e;
+			
+		} finally {
+
+			// be sure database handles are closed
+			if( rs != null ) {
+				try { rs.close(); } catch( Throwable t ) { ; }
+				rs = null;
+			}
+
+			if( pstmt != null ) {
+				try { pstmt.close(); } catch( Throwable t ) { ; }
+				pstmt = null;
+			}
+
+
+			if( dbConnection != null ) {
+				try { dbConnection.close(); } catch( Throwable t ) { ; }
+				dbConnection = null;
+			}
+		}
+	}
 	
 	
 }

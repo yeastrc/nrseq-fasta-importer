@@ -19,7 +19,7 @@ import org.yeastrc.nrseq_fasta_importer.constants.WebServiceErrorMessageConstant
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
 import org.yeastrc.nrseq_fasta_importer.objects.GenericWebserviceResponse;
-import org.yeastrc.nrseq_fasta_importer.objects.UserProvidedTaxonomyIds;
+import org.yeastrc.nrseq_fasta_importer.objects.UserProvidedTaxonomyId;
 import org.yeastrc.nrseq_fasta_importer.threads.ProcessImportFASTAFileThread;
 
 @Path("/saveTaxonomyFromUser")
@@ -45,9 +45,9 @@ public class SaveTaxonomyFromUserSetStatusQueuedWebservice {
 		
 		try {
 			
-			List<UserProvidedTaxonomyIds> userProvidedTaxonomyIds = saveTaxonomyFromUserSetStatusQueuedRequest.getUserProvidedTaxonomyIds();
+			List<UserProvidedTaxonomyId> userProvidedTaxonomyIds = saveTaxonomyFromUserSetStatusQueuedRequest.getUserProvidedTaxonomyIds();
 			
-			FASTAHeaderNoTaxIdDeterminedDAO.getInstance().update_userAssignedTaxId( userProvidedTaxonomyIds );
+			FASTAHeaderNoTaxIdDeterminedDAO.getInstance().update_userAssignedTaxIdForList( userProvidedTaxonomyIds );
 			
 			String newStatus = ImportStatusContants.STATUS_QUEUED_FOR_FIND_TAX_IDS;
 			
@@ -83,7 +83,7 @@ public class SaveTaxonomyFromUserSetStatusQueuedWebservice {
 		
 		private int fasta_import_tracking_id;
 		
-		private List<UserProvidedTaxonomyIds> userProvidedTaxonomyIds;
+		private List<UserProvidedTaxonomyId> userProvidedTaxonomyIds;
 
 		public int getFasta_import_tracking_id() {
 			return fasta_import_tracking_id;
@@ -93,12 +93,12 @@ public class SaveTaxonomyFromUserSetStatusQueuedWebservice {
 			this.fasta_import_tracking_id = fasta_import_tracking_id;
 		}
 
-		public List<UserProvidedTaxonomyIds> getUserProvidedTaxonomyIds() {
+		public List<UserProvidedTaxonomyId> getUserProvidedTaxonomyIds() {
 			return userProvidedTaxonomyIds;
 		}
 
 		public void setUserProvidedTaxonomyIds(
-				List<UserProvidedTaxonomyIds> userProvidedTaxonomyIds) {
+				List<UserProvidedTaxonomyId> userProvidedTaxonomyIds) {
 			this.userProvidedTaxonomyIds = userProvidedTaxonomyIds;
 		}
 

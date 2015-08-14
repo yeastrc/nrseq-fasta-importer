@@ -28,16 +28,21 @@ var TAXONOMY_ID_LOOKUP_TIMER_DELAY = 1300;  // in milliseconds
 //
 //var SHOW_FILE_AFTER_SAVED_TAXONOMY_IDS_DELAY = 5000;  // in milliseconds
 
+
+var taxonomyIdLookupTimeoutTimerIdAttr = "taxonomyIdLookupTimeoutTimerId";
+
+
+
 var updatePageDataNeeded = true;
 
 var lastHeaderNoTaxonomyId = null;
 
 
 
-var _updateStatusTimerIds = [];
+var updateStatusTimerIds = {};
 
 //  Cached taxonomy string by id
-var _taxonomyById = { };
+var taxonomyById = { };
 
 
 //
@@ -50,16 +55,106 @@ var _taxonomyById = { };
 //	
 
 
-function cancelUpdateStatusTimers() {
+
+
+function add_updateStatusTimerId( params ) {
 	
-	for ( var index = 0; index < _updateStatusTimerIds.length; index++ ) {
+	var updateStatusTimerId = params.updateStatusTimerId;
+	var file_import_id = params.file_import_id;
+
+	if ( ! updateStatusTimerIds[ file_import_id ] ) {
 		
-		var updateStatusTimerId = _updateStatusTimerIds[ index ];
-		
-		clearTimeout( updateStatusTimerId );
+		updateStatusTimerIds[ file_import_id ] = {};
 	}
 	
-	_updateStatusTimerIds = [];
+	var updateStatusTimerIds_for__file_import_id = updateStatusTimerIds[ file_import_id ];
+	
+	updateStatusTimerIds_for__file_import_id[ updateStatusTimerId ] = updateStatusTimerId;
+}
+
+
+
+function remove_updateStatusTimerId( params ) {
+	
+
+	var updateStatusTimerId = params.updateStatusTimerId;
+	var file_import_id = params.file_import_id;
+	
+//	var updateStatusTimerIdsKeysArray = Object.keys( updateStatusTimerIds );
+	
+
+	if (  updateStatusTimerIds[ file_import_id ] ) {
+
+		var updateStatusTimerIds_for__file_import_id = updateStatusTimerIds[ file_import_id ];
+
+		delete updateStatusTimerIds_for__file_import_id[ updateStatusTimerId ];
+		
+		var updateStatusTimerIdsKeysArray = Object.keys( updateStatusTimerIds_for__file_import_id );
+		
+		if ( updateStatusTimerIdsKeysArray.length === 0  ) {
+			
+			delete updateStatusTimerIds[ file_import_id ];
+		}
+	}	
+
+//	var updateStatusTimerIdsKeysArray = Object.keys( updateStatusTimerIds );
+	
+//	var z = 0;
+	
+}
+
+
+
+
+function cancel_all_updateStatusTimerId_for__file_import_id( params ) {
+	
+	var file_import_id = params.file_import_id;
+	
+
+	if ( updateStatusTimerIds[ file_import_id ] ) {
+
+		var updateStatusTimerIdsPerFileImportId =  updateStatusTimerIds[ file_import_id ];
+
+		var updateStatusTimerIdsPerFileImportIdKeysArray = Object.keys( updateStatusTimerIdsPerFileImportId );
+
+		for ( var subIndex = 0; subIndex < updateStatusTimerIdsPerFileImportIdKeysArray.length; subIndex++ ) {
+
+			var updateStatusTimerIdsPerFileImportIdProperty = updateStatusTimerIdsPerFileImportIdKeysArray[ subIndex ];
+
+			var updateStatusTimerId = updateStatusTimerIdsPerFileImportId[ updateStatusTimerIdsPerFileImportIdProperty ];
+
+			clearTimeout( updateStatusTimerId );
+			
+			remove_updateStatusTimerId( { file_import_id : file_import_id, updateStatusTimerId : updateStatusTimerIdsPerFileImportIdProperty } );
+		}
+	}
+}
+
+///////////
+
+function cancelUpdateStatusTimers() {
+
+	var updateStatusTimerIdsRootKeysArray = Object.keys( updateStatusTimerIds );
+
+	for ( var index = 0; index < updateStatusTimerIdsRootKeysArray.length; index++ ) {
+		
+		var updateStatusTimerIdsRootProperty = updateStatusTimerIdsRootKeysArray[ index ];
+		
+		var updateStatusTimerIdsPerFileImportId =  updateStatusTimerIds[ updateStatusTimerIdsRootProperty ];
+
+		var updateStatusTimerIdsPerFileImportIdKeysArray = Object.keys( updateStatusTimerIdsPerFileImportId );
+		
+		for ( var subIndex = 0; subIndex < updateStatusTimerIdsPerFileImportIdKeysArray.length; subIndex++ ) {
+
+			var updateStatusTimerIdsPerFileImportIdProperty = updateStatusTimerIdsPerFileImportIdKeysArray[ subIndex ];
+
+			var updateStatusTimerId = updateStatusTimerIdsPerFileImportId[ updateStatusTimerIdsPerFileImportIdProperty ];
+
+			clearTimeout( updateStatusTimerId );
+		}
+	}
+	
+	updateStatusTimerIds = {};
 }
 
 
@@ -229,6 +324,12 @@ function showFileDetailsForRow( $file_entry_row_jq ) {
 		$single_file_info_block.detach();
 		
 		$single_file_info_block.appendTo( $file_list_details_holder_jq );
+		
+		var $prev_item_status_hidden_Field = $("#prev_item_status");
+		
+		$prev_item_status_hidden_Field.val( "" );  //  clear prev status value
+		
+
 
 		showFile();
 	}
@@ -263,23 +364,82 @@ function processStatus( params ) {
 	
 	if ( statusData.noRecordFound ) {
 		
-		noRecordFound();
+		//  not found so remove from page
+
+		var $item_status_cell = $("#item_status_id_" + file_import_id );
+
+		if ( $item_status_cell.length === 0 ) {
+			
+			return;  //  no longer on the page
+		}
+
+		
+		var $file_entry_row_jq =  $item_status_cell.closest(".file_entry_row_jq");
+		
+		var $file_list_details_row = $file_entry_row_jq.next();
+		
+		if ( $file_list_details_row.length === 0 ) {
+			throw '$file_list_details_row.length === 0';
+		}
+		
+		if ( ! $file_list_details_row.hasClass("file_list_details_row_jq" ) ) {
+			throw '! $file_list_details_row.hasClass("file_list_details_row_jq"';
+		}
+		
+		
+		//  First move single_file_info_block div out from under 
+		//     $file_list_details_row  before before emptying it 
+		
+
+		var $single_file_info_block = $file_list_details_row.find("#single_file_info_block");
+		
+		if ( $single_file_info_block.length > 0 ) {
+			
+			//  $single_file_info_block was found under $file_list_details_row so it needs 
+			//    to be moved to single_file_info_block_holder before file_list_details_row is removed
+
+			$single_file_info_block.detach();
+			
+			var $single_file_info_block_holder = $("#single_file_info_block_holder");
+
+			$single_file_info_block.appendTo( $single_file_info_block_holder );
+		}
+		
+
+		$file_list_details_row.remove();
+		
+		$file_entry_row_jq.remove();
+		
 		return;  // EARLY EXIT
 	}
 	
 
 
-	if ( ! ( statusData.failed || statusData.importComplete ) ) {
+	if ( ! ( statusData.failed || statusData.importComplete || statusData.systemError
+			
+			|| statusData.status === 'queued for validation__' //  TODO  'queued for validation__' is temporary
+			|| statusData.status ===  'user input required'    //  TODO  'user input required' is temporary
+					
+					) ) { 
+		
+		cancel_all_updateStatusTimerId_for__file_import_id( { file_import_id : file_import_id } );
+
+		
+		var updateStatusTimerIdForRemove = null;
 		
 		var updateStatusTimerId = setTimeout( function() {
 			
 			//  refresh status after delay
 			
+			remove_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerIdForRemove, file_import_id : file_import_id } );
+			
 			updateStatus( {  file_import_id : file_import_id } ); 
 
 		}, UPDATE_STATUS_DELAY );
 		
-		_updateStatusTimerIds.push( updateStatusTimerId );
+		updateStatusTimerIdForRemove = updateStatusTimerId;
+		
+		add_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerId, file_import_id : file_import_id } );
 		
 	}
 	
@@ -288,6 +448,11 @@ function processStatus( params ) {
 	var $item_status_cell = $("#item_status_id_" + file_import_id );
 	
 	var $item_status_cell__Spans = $item_status_cell.find("span");
+	
+	if ( $item_status_cell__Spans.length === 0 ) {
+		
+		throw "no spans under call for file_import_id: " + file_import_id + ", #item_status_id_" + file_import_id;
+	}
 
 	var $item_status_holder_jq = null;
 
@@ -306,7 +471,10 @@ function processStatus( params ) {
 		}
 	});
 
-	
+	if ( $item_status_holder_jq === null ) {
+		
+		throw 'no spans with attribute "data-item-status-holder" under call for file_import_id: ' + file_import_id + ", #item_status_id_" + file_import_id;
+	}
 	
 	
 	$item_status_holder_jq.text( statusData.status );
@@ -327,6 +495,7 @@ function processStatus( params ) {
 //	private boolean importProcessing;
 //	private boolean failed;
 //	private boolean importComplete;
+//	private boolean systemError;
 //	
 //	private Integer currentProcessCount;
 //	private Integer totalCount;
@@ -363,9 +532,25 @@ function processStatus( params ) {
 
 
 			$("#processing_count_block").show();
+			
+			var currentProcessCountString;
+			var totalCountString;
+			
+			if ( statusData.currentProcessCount.toLocaleString ) {
+				
+				currentProcessCountString = statusData.currentProcessCount.toLocaleString();
+				totalCountString = statusData.totalCount.toLocaleString();
+				
+			} else {
+			
+				currentProcessCountString = statusData.currentProcessCount.toString();
+				totalCountString = statusData.totalCount.toString();
+			}
+			
+			
 
-			$("#current_processing_count").text( statusData.currentProcessCount );
-			$("#total_count").text( statusData.totalCount );
+			$("#current_processing_count").text( currentProcessCountString );
+			$("#total_count").text( totalCountString );
 
 		}
 
@@ -562,11 +747,16 @@ function showNoTaxonomy( params ) {
 	var file_import_id = $("#file_import_id").val();
 	
 	
-	var $item_status_cell = $("#item_status_id_" + file_import_id );
+//	var $item_status_cell = $("#item_status_id_" + file_import_id );
+//	
+//	var $prev_item_status_jq = $item_status_cell.find(".prev_item_status_jq");
+//	
+//	var prev_item_status_val = $prev_item_status_jq.val();
 	
-	var $prev_item_status_jq = $item_status_cell.find(".prev_item_status_jq");
 	
-	var prev_item_status_val = $prev_item_status_jq.val();
+	var $prev_item_status_hidden_Field = $("#prev_item_status");
+	
+	var prev_item_status_val = $prev_item_status_hidden_Field.val();
 	
 	
 	if ( prev_item_status_val === statusData.status ) {
@@ -577,7 +767,7 @@ function showNoTaxonomy( params ) {
 	}
 	
 	
-	$prev_item_status_jq.val( statusData.status );
+	$prev_item_status_hidden_Field.val( statusData.status );
 
 	
 	
@@ -676,8 +866,11 @@ function showNoTaxonomyProcessResponse( params ) {
 			var html = template(context);
 
 			var $no_tax_id_entry = $(html).appendTo( $no_tax_id_table__tbody );
-
 			
+			var $taxonomy_id_from_user_jq = $no_tax_id_entry.find(".taxonomy_id_from_user_jq");
+
+			lookupOrganismForTaxonomyId( { $taxonomyFieldHTMLElement : $taxonomy_id_from_user_jq } );
+
 			
 		}
 
@@ -947,29 +1140,74 @@ function taxonomyIdChanged( taxonomyFieldHTMLElement ) {
 	
 	var $taxonomyFieldHTMLElement = $( taxonomyFieldHTMLElement );
 	
-	var taxonomyValue = $taxonomyFieldHTMLElement.val();
+	saveTaxonomyIdToDBOnChange( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
 	
-	if ( taxonomyValue === "" ) {
-		
-		updateSaveTaxonomyIdsButtonForTaxonomyIdChange();
-		return;
-	}
-	
-	if ( _taxonomyById[ taxonomyValue ] ) {
-
-		updateForOrganismForTaxonomyId(
-				{
-					$taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement,
-					taxonomyData : _taxonomyById[ taxonomyValue ]
-				}
-		);
-		
-	} else {
-		
-		getOrganismForTaxonomyId( taxonomyFieldHTMLElement );
-		
-	}
+	lookupOrganismForTaxonomyId( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
 }
+
+
+/////////////////////////////
+
+//Save user entered taxonomy ids to database
+
+function saveTaxonomyIdToDBOnChange( params ) {
+
+
+	var $taxonomyFieldHTMLElement = params.$taxonomyFieldHTMLElement;
+	var taxonomyFieldHTML_Value = $taxonomyFieldHTMLElement.val();
+
+	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
+	
+	var recordIdFromRow = $taxonomy_entry_container_jq.attr("data-record-id");
+
+	
+
+	var ajaxRequestData = {
+			noTaxonomyIdRecordId : recordIdFromRow
+	};
+	
+	if ( taxonomyFieldHTML_Value && taxonomyFieldHTML_Value !== "" && is_numeric( taxonomyFieldHTML_Value ) ) {
+		
+		var taxonomyId = parseInt( taxonomyFieldHTML_Value, 10 );
+		
+		ajaxRequestData.taxonomyId = taxonomyId;
+	}
+	
+
+	var ajaxRequestDataString = JSON.stringify( ajaxRequestData ); 
+
+
+	var _URL = contextPathJSVar + "/services/headerNoTaxonomy/update";
+
+
+
+	$.ajax({
+		type: "POST",
+		url: _URL,
+		contentType: "application/json; charset=utf-8",
+		data: ajaxRequestDataString,  //  The data sent
+
+		dataType: "json", // returned data type
+
+		traditional: true,  //  Force traditional serialization of the data sent
+//		One thing this means is that arrays are sent as the object property instead of object property followed by "[]".
+//		So searchIds array is passed as "searchIds=<value>" which is what Jersey expects
+
+		success: function(data)	{
+
+			var z = 0;
+		},
+		failure: function(errMsg) {
+			handleAJAXFailure( errMsg );
+		},
+		error: function(jqXHR, textStatus, errorThrown) {	
+
+			handleAJAXError( jqXHR, textStatus, errorThrown );
+		}
+	});
+}
+
+
 
 
 
@@ -992,8 +1230,6 @@ function taxonomyIdKeyUp( taxonomyFieldHTMLElement ) {
 			
 			
 	
-	var taxonomyIdLookupTimeoutTimerIdAttr = "taxonomyIdLookupTimeoutTimerId";
-	
 	var taxonomyIdLookupTimeoutTimerId = $taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr );
 	
 	if ( taxonomyIdLookupTimeoutTimerId ) {
@@ -1006,35 +1242,45 @@ function taxonomyIdKeyUp( taxonomyFieldHTMLElement ) {
 	
 	taxonomyIdLookupTimeoutTimerId = setTimeout( function() {
 		
-		$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, null );
-
-		var taxonomyValue = $taxonomyFieldHTMLElement.val();
-
-		if ( taxonomyValue === "" ) {
-			
-			updateSaveTaxonomyIdsButtonForTaxonomyIdChange();
-			return;
-		}
-		
-		if ( _taxonomyById[ taxonomyValue ] ) {
-
-			updateForOrganismForTaxonomyId(
-					{
-						$taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement,
-						taxonomyData : _taxonomyById[ taxonomyValue ]
-					}
-			);
-			
-		} else {
-			
-			getOrganismForTaxonomyId( taxonomyFieldHTMLElement );
-			
-		}
+		lookupOrganismForTaxonomyId( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
 			
 	}, TAXONOMY_ID_LOOKUP_TIMER_DELAY );
 	
 	
 	return false;
+}
+
+/////////
+
+function lookupOrganismForTaxonomyId( params ) {
+
+	var $taxonomyFieldHTMLElement = params.$taxonomyFieldHTMLElement;
+
+	$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, null );
+
+	var taxonomyValue = $taxonomyFieldHTMLElement.val();
+
+	if ( taxonomyValue === "" ) {
+
+		updateSaveTaxonomyIdsButtonForTaxonomyIdChange();
+		return;
+	}
+
+	if ( taxonomyById[ taxonomyValue ] ) {
+
+		updateForOrganismForTaxonomyId(
+				{
+					$taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement,
+					taxonomyData : taxonomyById[ taxonomyValue ]
+				}
+		);
+
+	} else {
+
+		getOrganismForTaxonomyId( $taxonomyFieldHTMLElement );
+
+	}
+
 }
 
 
@@ -1053,7 +1299,7 @@ function updateForOrganismForTaxonomyId( params ) {
 		
 		var taxonomyIdString = taxonomyId.toString();
 	
-		_taxonomyById[ taxonomyIdString ] = taxonomyData;
+		taxonomyById[ taxonomyIdString ] = taxonomyData;
 	}
 
 	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");

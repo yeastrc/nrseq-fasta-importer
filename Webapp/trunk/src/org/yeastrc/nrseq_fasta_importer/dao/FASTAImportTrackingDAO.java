@@ -413,6 +413,92 @@ public class FASTAImportTrackingDAO {
 	
 	
 
+
+	/**
+	 * @param id
+	 * @return 
+	 * @throws Exception
+	 */
+	public Integer getGetTaxonomyIdsPassNumberForId( int id ) throws Exception {
+
+		Integer result = null;
+
+		Connection dbConnection = null;
+
+		try {
+
+			dbConnection = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+
+			result = getGetTaxonomyIdsPassNumberForId( id, dbConnection );
+
+
+		} finally {
+
+			if( dbConnection != null ) {
+				try { dbConnection.close(); } catch( Throwable t ) { ; }
+				dbConnection = null;
+			}
+
+		}
+		
+		return result;
+	}
+	
+	
+	/**
+	 * @param id
+	 * @return 
+	 * @throws Exception
+	 */
+	public Integer getGetTaxonomyIdsPassNumberForId( int id, Connection dbConnection ) throws Exception {
+
+		Integer result = null;
+		
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		final String sql = "SELECT get_taxonomy_ids_pass_number FROM fasta_import_tracking WHERE id = ?";
+		
+		try {
+			
+			pstmt = dbConnection.prepareStatement( sql );
+			pstmt.setInt( 1, id );
+			
+			rs = pstmt.executeQuery();
+			
+			if ( rs.next() ) {
+				
+				result = rs.getInt( "get_taxonomy_ids_pass_number" );
+			}
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Failed to select get_taxonomy_ids_pass_number, id: " + id + ", sql: " + sql;
+			
+			log.error( msg, e );
+			
+			throw e;
+			
+
+		} finally {
+			
+			// be sure database handles are closed
+			if( rs != null ) {
+				try { rs.close(); } catch( Throwable t ) { ; }
+				rs = null;
+			}
+			
+			if( pstmt != null ) {
+				try { pstmt.close(); } catch( Throwable t ) { ; }
+				pstmt = null;
+			}
+			
+		}
+		
+		return result;
+	}
+	
+
 	
 	/**
 	 * @return
@@ -566,9 +652,9 @@ public class FASTAImportTrackingDAO {
 		returnItem.setStatus( rs.getString( "status" ) );
 		returnItem.setInsertRequestURL( rs.getString( "insert_request_url" ) );
 		returnItem.setSha1sum( rs.getString( "sha1sum" ) );
-		returnItem.setTempFilename( rs.getString( "temp_filename" ) );
-		returnItem.setTempFilenameForImport( rs.getString( "temp_filename_for_import" ) );
+		returnItem.setTempFilenameNumber(  rs.getInt( "temp_filename_number" ));
 		returnItem.setFastaEntryCount( rs.getInt( "fasta_entry_count" ) );
+		returnItem.setGetTaxonomyIdsPassNumber( rs.getInt( "get_taxonomy_ids_pass_number" ) );
 		
 		int yrc_nrseq_tblDatabase_id = rs.getInt( "yrc_nrseq_tblDatabase_id" );
 		
@@ -583,20 +669,22 @@ public class FASTAImportTrackingDAO {
 	}
 	
 
+
 	//CREATE TABLE fasta_import_tracking (
 //			  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 //			  filename VARCHAR(512) NOT NULL,
 //			  description VARCHAR(500) NULL,
 //			  email VARCHAR(255) NULL,
 //			  status VARCHAR(45) NOT NULL,
-//	  		  insert_request_url VARCHAR(255) NULL DEFAULT NULL
+//			  insert_request_url VARCHAR(255) NULL DEFAULT NULL
 //			  sha1sum VARCHAR(45) NOT NULL,
-//			  temp_filename VARCHAR(255) NOT NULL,
-//			  temp_filename_for_import VARCHAR(255) NOT NULL,
+//			  temp_filename_number INT NOT NULL,
 //			  fasta_entry_count INT NULL,
+//			  get_taxonomy_ids_pass_number INT NOT NULL DEFAULT 0,
 //			  yrc_nrseq_tblDatabase_id INT NULL,
 //			  upload_date_time TIMESTAMP NOT NULL,
 //			  last_updated_date_time TIMESTAMP NULL,
+			  
 			  
 
 	
@@ -641,25 +729,27 @@ public class FASTAImportTrackingDAO {
 
 
 
+
 		//CREATE TABLE fasta_import_tracking (
 //				  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 //				  filename VARCHAR(512) NOT NULL,
 //				  description VARCHAR(500) NULL,
 //				  email VARCHAR(255) NULL,
 //				  status VARCHAR(45) NOT NULL,
-//		  		  insert_request_url VARCHAR(255) NULL DEFAULT NULL
+//				  insert_request_url VARCHAR(255) NULL DEFAULT NULL
 //				  sha1sum VARCHAR(45) NOT NULL,
-//				  temp_filename VARCHAR(255) NOT NULL,
-//				  temp_filename_for_import VARCHAR(255) NOT NULL,
+//				  temp_filename_number INT NOT NULL,
 //				  fasta_entry_count INT NULL,
+//				  get_taxonomy_ids_pass_number INT NOT NULL DEFAULT 0,
 //				  yrc_nrseq_tblDatabase_id INT NULL,
 //				  upload_date_time TIMESTAMP NOT NULL,
 //				  last_updated_date_time TIMESTAMP NULL,
+				  
 			
 
 
-		final String sql = "INSERT INTO fasta_import_tracking (filename, description, email, status, insert_request_url, sha1sum, temp_filename, temp_filename_for_import, last_updated_date_time)" +
-				" VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, NOW() )";
+		final String sql = "INSERT INTO fasta_import_tracking (filename, description, email, status, insert_request_url, sha1sum, temp_filename_number, last_updated_date_time)" +
+				" VALUES ( ?, ?, ?, ?, ?, ?, ?, NOW() )";
 
 		try {
 			
@@ -681,9 +771,7 @@ public class FASTAImportTrackingDAO {
 			counter++;
 			pstmt.setString( counter, item.getSha1sum() );
 			counter++;
-			pstmt.setString( counter, item.getTempFilename() );
-			counter++;
-			pstmt.setString( counter, item.getTempFilenameForImport() );
+			pstmt.setInt( counter, item.getTempFilenameNumber() );
 			
 			pstmt.executeUpdate();
 			
@@ -731,7 +819,44 @@ public class FASTAImportTrackingDAO {
 		
 	}
 	
+
+
+	/**
+	 * @param status
+	 * @param id
+	 * @return incremented get_taxonomy_ids_pass_number
+	 * @throws Exception
+	 */
+	public Integer updateStatusIncrementGetTaxonomyIdsPassNumber( String status, int id ) throws Exception {
+		
+		Integer getTaxonomyIdsPassNumber = null;
+		
+		Connection dbConnection = null;
+
+		try {
+			
+			dbConnection = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+
+			updateStatus( status, id, dbConnection );
+			
+			incrementGetTaxonomyIdsPassNumber( id, dbConnection );
+			
+			getTaxonomyIdsPassNumber = getGetTaxonomyIdsPassNumberForId( id, dbConnection );
+
+		} finally {
+			
+			if( dbConnection != null ) {
+				try { dbConnection.close(); } catch( Throwable t ) { ; }
+				dbConnection = null;
+			}
+			
+		}
+		
+		return getTaxonomyIdsPassNumber;
+	}
 	
+	
+
 	/**
 	 * @param status
 	 * @param id
@@ -739,7 +864,34 @@ public class FASTAImportTrackingDAO {
 	 */
 	public void updateStatus( String status, int id ) throws Exception {
 		
-		Connection conn = null;
+		
+		Connection dbConnection = null;
+
+		try {
+			
+			dbConnection = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+
+			updateStatus( status, id, dbConnection );
+
+		} finally {
+			
+			if( dbConnection != null ) {
+				try { dbConnection.close(); } catch( Throwable t ) { ; }
+				dbConnection = null;
+			}
+			
+		}
+		
+	}
+	
+	
+	/**
+	 * @param status
+	 * @param id
+	 * @throws Exception
+	 */
+	public void updateStatus( String status, int id, Connection dbConnection ) throws Exception {
+		
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 
@@ -748,9 +900,7 @@ public class FASTAImportTrackingDAO {
 		
 		try {
 			
-			conn = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
-			
-			pstmt = conn.prepareStatement( sql );
+			pstmt = dbConnection.prepareStatement( sql );
 			
 			int counter = 0;
 			
@@ -783,16 +933,63 @@ public class FASTAImportTrackingDAO {
 				pstmt = null;
 			}
 			
-			if( conn != null ) {
-				try { conn.close(); } catch( Throwable t ) { ; }
-				conn = null;
-			}
 			
 		}
 		
 		FASTAImportTrackingHistoryDAO.getInstance().save( status, id /* fastaImportTrackingId */ );		
 	}
 	
+	
+
+	/**
+	 * @param id
+	 * @param dbConnection
+	 * @throws Exception
+	 */
+	public void incrementGetTaxonomyIdsPassNumber( int id, Connection dbConnection ) throws Exception {
+		
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+
+		final String sql = "UPDATE fasta_import_tracking SET get_taxonomy_ids_pass_number = get_taxonomy_ids_pass_number + 1 WHERE id = ?";
+
+		
+		try {
+			
+			pstmt = dbConnection.prepareStatement( sql );
+			
+			int counter = 0;
+			
+			counter++;
+			pstmt.setInt( counter, id );
+			
+			pstmt.executeUpdate();
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Failed to increment get_taxonomy_ids_pass_number, sql: " + sql;
+			
+			log.error( msg, e );
+			
+			throw e;
+			
+		} finally {
+			
+			// be sure database handles are closed
+			if( rs != null ) {
+				try { rs.close(); } catch( Throwable t ) { ; }
+				rs = null;
+			}
+			
+			if( pstmt != null ) {
+				try { pstmt.close(); } catch( Throwable t ) { ; }
+				pstmt = null;
+			}
+			
+			
+		}
+		
+	}
 	
 
 	

@@ -2,6 +2,7 @@ package org.yeastrc.nrseq_fasta_importer.threads;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.process_fasta_file.ProcessImportFASTAFile;
+import org.yeastrc.nrseq_fasta_importer.process_fasta_file.RestartAndResetInProgressRequestsOnWebappStartup;
 
 /**
  * 
@@ -10,6 +11,8 @@ import org.yeastrc.nrseq_fasta_importer.process_fasta_file.ProcessImportFASTAFil
 public class ProcessImportFASTAFileThread extends Thread {
 
 	private static final Logger log = Logger.getLogger(ProcessImportFASTAFileThread.class);
+	
+	private static final int WAIT_TIME_WHEN_NO_WORK_TO_DO = 10 * 60 * 1000;  // in milliseconds
 	
 	private static ProcessImportFASTAFileThread instance = null;
 	
@@ -58,7 +61,6 @@ public class ProcessImportFASTAFileThread extends Thread {
 		instance = new ProcessImportFASTAFileThread();
 		instance.setName( "ProcessImportFASTAFile-Thread-" + threadCreateCount );
 		
-		instance.processImportFASTAFile = ProcessImportFASTAFile.getInstance();
 	}
 
 	/**
@@ -102,6 +104,11 @@ public class ProcessImportFASTAFileThread extends Thread {
 		//  awaken this thread if it is in 'wait' state ( not currently processing a job )
 
 		this.awaken();
+		
+		if ( processImportFASTAFile != null ) {
+
+			processImportFASTAFile.shutdown();
+		}
 	}
 
 
@@ -111,6 +118,8 @@ public class ProcessImportFASTAFileThread extends Thread {
 	 */
 	@Override
 	public void run() {
+		
+		RestartAndResetInProgressRequestsOnWebappStartup.getInstance().process();
 
 		while ( keepRunning ) {
 
@@ -148,7 +157,7 @@ public class ProcessImportFASTAFileThread extends Thread {
 
 						log.debug( "before 'while ( keepRunning )', before wait() called" );
 
-						wait();
+						wait( WAIT_TIME_WHEN_NO_WORK_TO_DO );
 
 						if ( log.isDebugEnabled() ) {
 

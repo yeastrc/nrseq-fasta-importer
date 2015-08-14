@@ -4,12 +4,10 @@ package org.yeastrc.nrseq_fasta_importer.process_fasta_file;
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
-import org.yeastrc.nrseq_fasta_importer.dao.GeneralImportErrorDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
-import org.yeastrc.nrseq_fasta_importer.dto.GeneralImportErrorDTO;
-import org.yeastrc.nrseq_fasta_importer.exception.DuplicateFilenameException;
+import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDuplicateFilenameException;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
-import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailSystemError;
+import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterRemoteWebserviceCallErrorException;
 
 /**
  * 
@@ -32,12 +30,16 @@ public class ProcessImportFASTAFile {
 	
 	private volatile FASTAImportTrackingDTO currentFastaImportTrackingDTO = null;
 	
+	private volatile ValidateFASTAFileAndInitialProcessingOfData currentValidateFASTAFile;
 	private volatile CheckFASTATaxonomyIds currentCheckFASTATaxonomyIds;
 	private volatile ImportFASTAFile currentImportFASTAFile;
 
 	private volatile int currentFASTAEntryCount = CURRENT_ENTRY_COUNT_NOT_SET;
 	
 	private volatile ImporterState importerState = ImporterState.NOT_IMPORTING;
+
+	private volatile boolean keepRunning = true;
+	
 	
 
 	private ProcessImportFASTAFile() { }
@@ -46,13 +48,66 @@ public class ProcessImportFASTAFile {
 	}
 	
 
+
+	/**
+	 * awaken thread to process request, calls "notify()"
+	 */
+	public void awaken() {
+
+		if ( log.isDebugEnabled() ) {
+
+			log.debug("awaken() called:  " );
+		}
+
+		synchronized (this) {
+			
+			notify();
+		}
+
+	}
+
+
+
+
+	/**
+	 * shutdown was received from the operating system.  This is called on a different thread.
+	 */
+	public void shutdown() {
+
+
+		log.info("shutdown() called");
+
+
+		synchronized (this) {
+
+			this.keepRunning = false;
+
+		}
+
+
+		//  awaken this thread if it is in 'wait' state ( not currently processing a job )
+
+		this.awaken();
+	}
+
+
+	
+	
+	
+	/**
+	 * @return
+	 */
 	public int getCurrentSequenceCount() {
-		
-		if ( importerState == ImporterState.CHECKING_TAXONOMY_IDS ) {
+
+		if ( importerState == ImporterState.VALIDATING && currentValidateFASTAFile != null ) {
+			
+			return currentValidateFASTAFile.getCurrentSequenceCount();
+			
+		} else if ( importerState == ImporterState.CHECKING_TAXONOMY_IDS && currentCheckFASTATaxonomyIds != null ) {
 			
 			return currentCheckFASTATaxonomyIds.getCurrentSequenceCount();
 			
-		} else if ( importerState == ImporterState.IMPORTING ) {
+		} else if ( importerState == ImporterState.IMPORTING && currentImportFASTAFile != null ) {
 			
 			return currentImportFASTAFile.getCurrentSequenceCount();
 			
@@ -61,6 +116,33 @@ public class ProcessImportFASTAFile {
 			return 0;
 		}
 	}
+	
+	
+	/**
+	 * @return
+	 */
+	public int getCurrentFASTAEntryCount() {
+
+		if ( importerState == ImporterState.VALIDATING && currentValidateFASTAFile != null ) {
+			
+			return currentValidateFASTAFile.getTotalSequenceCount();
+			
+		} else {
+		
+			return currentFASTAEntryCount;
+		}
+	}
+
+	
+	/**
+	 * @return
+	 */
+	public FASTAImportTrackingDTO getCurrentFastaImportTrackingDTO() {
+
+		return currentFastaImportTrackingDTO;
+	}
+	
+
 	
 	
 	
@@ -97,19 +179,20 @@ public class ProcessImportFASTAFile {
 				} else {
 
 
-					ValidationResult validationResult = null;
-
 
 					if ( ImportStatusContants.STATUS_QUEUED_FOR_VALIDATION.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
+						
+						importerState = ImporterState.VALIDATING;
 
+						currentValidateFASTAFile = ValidateFASTAFileAndInitialProcessingOfData.getInstance();
+						
 						//  throws exception if error encountered
-						validationResult = ValidateFASTAFile.getInstance().validateFASTAFile( currentFastaImportTrackingDTO );
+						currentValidateFASTAFile.validateFASTAFile( currentFastaImportTrackingDTO );
 						
 						//  validation passed
+						
+						currentValidateFASTAFile = null;
 
-						FASTAImportTrackingDAO.getInstance().updateFastaEntryCount( validationResult.getSequenceCount(), currentFastaImportTrackingDTO.getId() );
-
-						currentFastaImportTrackingDTO.setFastaEntryCount( validationResult.getSequenceCount() );
 					}					
 
 					
@@ -152,24 +235,28 @@ public class ProcessImportFASTAFile {
 			} catch ( FASTAImporterDataErrorException e ) {
 
 
-			} catch ( DuplicateFilenameException e ) {
+			} catch ( FASTAImporterDuplicateFilenameException e ) {
+				
+				
+			} catch ( FASTAImporterRemoteWebserviceCallErrorException e ) {
 
+				synchronized (this) {
+
+					try {
+						
+						wait( 10000 );  //  sleep 10 seconds so don't quickly and repeatedly generate errors.
+
+					} catch (InterruptedException e2) {
+
+						log.info("wait() interrupted with InterruptedException");
+
+					}
+				}
 
 			} catch ( Exception e ) {
 
 				if ( currentFastaImportTrackingDTO != null ) {
 
-					//  Probably already set this status but do again
-
-					GeneralImportErrorDTO generalImportErrorDTO = new GeneralImportErrorDTO();
-					
-					generalImportErrorDTO.setFastaImportTrackingId( currentFastaImportTrackingDTO.getId() );
-					generalImportErrorDTO.setMessage( "System Error" );
-					
-					GeneralImportErrorDAO.getInstance().save(generalImportErrorDTO);
-
-					SendEmailSystemError.getInstance().sendEmailSystemError( currentFastaImportTrackingDTO );
-					
 
 				} else {
 
@@ -179,8 +266,22 @@ public class ProcessImportFASTAFile {
 				}
 
 				log.error( "Exception", e );
+				
 
-				throw e;
+				synchronized (this) {
+
+					try {
+						
+						wait( 10000 );  //  sleep 10 seconds so don't quickly and repeatedly generate system errors.
+
+					} catch (InterruptedException e2) {
+
+						log.info("wait() interrupted with InterruptedException");
+
+					}
+				}
+
+//				throw e;
 
 			} finally {
 
@@ -188,6 +289,8 @@ public class ProcessImportFASTAFile {
 
 				currentFastaImportTrackingDTO = null;
 
+				currentValidateFASTAFile = null;
+				
 				currentCheckFASTATaxonomyIds = null;
 
 				currentImportFASTAFile = null;
@@ -198,15 +301,5 @@ public class ProcessImportFASTAFile {
 	}
 	
 	
-	
-	
-	public FASTAImportTrackingDTO getCurrentFastaImportTrackingDTO() {
-		return currentFastaImportTrackingDTO;
-	}
-	
-	
-	public int getCurrentFASTAEntryCount() {
-		return currentFASTAEntryCount;
-	}
 	
 }
