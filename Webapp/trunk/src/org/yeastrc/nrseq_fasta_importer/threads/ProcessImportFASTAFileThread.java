@@ -120,6 +120,39 @@ public class ProcessImportFASTAFileThread extends Thread {
 	public void run() {
 		
 		RestartAndResetInProgressRequestsOnWebappStartup.getInstance().process();
+		
+		
+		//  TODO   TEMP  REMOVE
+
+//		synchronized (this) {
+//
+//			try {
+//				
+//				if ( skipWait ) {  //  set true in awaken()
+//					
+//					
+//					
+//				} else {
+//
+//					log.debug( "before 'while ( keepRunning )', before wait() called" );
+//
+//					wait(  );
+//
+//					if ( log.isDebugEnabled() ) {
+//
+//						log.debug("before 'while ( keepRunning )', after wait() called:  ProcessImportFASTAFileThread.getId() = " + this.getId() );
+//					}
+//				}
+//
+//			} catch (InterruptedException e) {
+//
+//				log.info("wait() interrupted with InterruptedException");
+//
+//			}
+//		}
+
+		
+		
 
 		while ( keepRunning ) {
 

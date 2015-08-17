@@ -334,6 +334,7 @@
 	    	   <tr id="taxonomy_entry_container_{{id}}" class=" taxonomy_entry_container_jq  " 
 	    	   		data-record-id="{{id}}" data-header-line-number="{{headerLineNumber}}">
 	    	  	<td>
+	    	  	  <div >
 	    	  		<input type="text" class=" taxonomy_id_from_user_jq " style="width: 80px;" maxlength="14" 
 	    	  			value="{{userAssignedTaxId}}"
 	    	  			onchange="taxonomyIdChanged(this)" oninput="taxonomyIdChanged(this)" onkeyup="taxonomyIdKeyUp(this)" > <%-- --%>
@@ -342,6 +343,10 @@
 	    	  		<span class=" taxonomy_id_must_be_integer_jq " style="display: none; color: red;">
 	    	  			Taxonomy id must be an integer.</span>
 	    	  		<span class="taxonomy_id_not_found_jq" style="display: none; color: red;">Organism not found for taxonomy id</span>
+	    	  	  </div>
+	    	  	  <div >
+	    	  	  	<a href="blastSequence.do?id={{id}}" target="_blank" >blast sequence</a>
+	    	  	  </div>
 	    	  	</td>
 	    	  	<td>
 	    	  		{{headerName}}

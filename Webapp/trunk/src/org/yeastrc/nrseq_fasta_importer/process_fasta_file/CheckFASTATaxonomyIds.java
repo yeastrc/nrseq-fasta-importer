@@ -10,9 +10,11 @@ import org.yeastrc.nrseq_fasta_importer.constants.GeneralImportErrorConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.constants.TaxonomyIdNotFoundMaxCountConstants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedDAO;
+import org.yeastrc.nrseq_fasta_importer.dao.FASTAHeaderNoTaxIdDeterminedSequenceDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.GeneralImportErrorDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedDTO;
+import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedSequenceDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.GeneralImportErrorDTO;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
@@ -245,6 +247,12 @@ public class CheckFASTATaxonomyIds {
 
 								FASTAHeaderNoTaxIdDeterminedDAO.getInstance().save( fastaHeaderNoTaxIdDeterminedDTO );
 
+								FASTAHeaderNoTaxIdDeterminedSequenceDTO fASTAHeaderNoTaxIdDeterminedSequenceDTO = new FASTAHeaderNoTaxIdDeterminedSequenceDTO();
+								
+								fASTAHeaderNoTaxIdDeterminedSequenceDTO.setFastaHeaderNoTaxIdDeterminedId( fastaHeaderNoTaxIdDeterminedDTO.getId() );
+								fASTAHeaderNoTaxIdDeterminedSequenceDTO.setSequence( intermediateFileEntry.getSequence() );
+								
+								FASTAHeaderNoTaxIdDeterminedSequenceDAO.getInstance().save(fASTAHeaderNoTaxIdDeterminedSequenceDTO);
 
 								headerMatchesNotFound = true;
 

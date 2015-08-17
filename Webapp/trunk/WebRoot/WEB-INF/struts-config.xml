@@ -34,20 +34,13 @@
 			<forward name="Success" path="/WEB-INF/jsp-pages/home.jsp" redirect="false" />
 		</action>	
 		
-		<action
-		   path="/importFASTA_page"
-		   forward="/WEB-INF/jsp-pages/importFASTA_form.jsp">
+		<action path="/blastSequence"
+				type="org.yeastrc.nrseq_fasta_importer.www.struts.BlastSequenceAction"
+				scope="request"
+				validate="false">
 		</action>			
 		
-		<action 
-		   path="/listSubmittedFiles"
-		   forward="/WEB-INF/jsp-pages/listSubmittedFiles.jsp">
-		</action>			
 		
-		<action 
-		   	path="/showFile"
-			forward="/WEB-INF/jsp-pages/showFile.jsp">
-		</action>
 		
 	</action-mappings>
 	

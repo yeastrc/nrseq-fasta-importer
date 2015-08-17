@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.db.DBConnectionFactory;
@@ -94,6 +96,69 @@ public class YRC_NRSEQ_tblProteinDAO {
 	}
 	
 
+	/**
+	 * @param sequenceID
+	 * @return 
+	 * @throws Exception
+	 */
+	public List<YRC_NRSEQ_tblProteinDTO> getForSequenceId( int sequenceID ) throws Exception {
+
+		List<YRC_NRSEQ_tblProteinDTO> resultList = new ArrayList<>();
+		
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		final String sql = "SELECT * FROM tblProtein WHERE sequenceID = ? ";
+		
+		try {
+			
+			conn = DBConnectionFactory.getConnection( DBConnectionFactory.YRC_NRSEQ );
+			
+			pstmt = conn.prepareStatement( sql );
+			pstmt.setInt( 1, sequenceID );
+			
+			rs = pstmt.executeQuery();
+			
+			while ( rs.next() ) {
+				
+				YRC_NRSEQ_tblProteinDTO result = populateResultObject( rs );
+				
+				resultList.add( result );
+			}
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Failed to select YRC_NRSEQ_tblProteinDTO, sequenceID: " + sequenceID + ", sql: " + sql;
+			
+			log.error( msg, e );
+			
+			throw e;
+			
+
+		} finally {
+			
+			// be sure database handles are closed
+			if( rs != null ) {
+				try { rs.close(); } catch( Throwable t ) { ; }
+				rs = null;
+			}
+			
+			if( pstmt != null ) {
+				try { pstmt.close(); } catch( Throwable t ) { ; }
+				pstmt = null;
+			}
+			
+			if( conn != null ) {
+				try { conn.close(); } catch( Throwable t ) { ; }
+				conn = null;
+			}
+			
+		}
+		
+		return resultList;
+	}
+	
 	/**
 	 * @param sequenceID
 	 * @param speciesID
