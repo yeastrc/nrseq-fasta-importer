@@ -40,14 +40,26 @@ var lastHeaderNoTaxonomyId = null;
 
 
 
-//
-//$(document).ready(function()  { 
-//	
-//		
-//		initPage();
-//		
-//});
-//	
+
+$(document).ready(function()  { 
+	
+	initPage_showFileOnHomePage();
+		
+		
+});
+	
+
+
+/////////////
+
+function initPage_showFileOnHomePage() {
+
+
+	attachFileImportDetailsOverlayClickHandlers();
+
+
+}
+
 
 
 
@@ -80,12 +92,17 @@ function getStatusBackgroundClass( statusData ) {
 
 		colorStatusClassNameToAdd = "started-status";
 
+	} else if ( statusData.systemError ) {
+		
+		colorStatusClassNameToAdd = "system-error-status";
 	}
 
 	return colorStatusClassNameToAdd;
 
 }
 
+
+///////
 
 function showFileDetailsForIdInHiddenField(  ) {
 	
@@ -110,6 +127,20 @@ function showFileDetailsForIdInHiddenField(  ) {
 		var recordIdFromRow = $file_entry_row_jq.attr("data-record-id");
 
 		if ( record_id === recordIdFromRow ) {
+			
+			// TODO   Scroll window so row is visible in viewport
+			
+//			var rowTop = $file_entry_row_jq.offset().top;
+//			
+//			var viewportHeight = $( window ).height();
+//			
+//			var scrollTop = $(window).scrollTop();
+//			
+//			var minScrollTopToShowRow = rowTop - viewportHeight
+//			
+//			if (  )
+			
+			
 		
 			showFileDetailsForRow( { $file_entry_row_jq : $file_entry_row_jq } );
 			
@@ -119,6 +150,7 @@ function showFileDetailsForIdInHiddenField(  ) {
 }
 
 
+///////
 
 function showFileDetails( clickedLinkElement ) {
 	
@@ -134,133 +166,101 @@ function showFileDetails( clickedLinkElement ) {
 	showFileDetailsForRow(  { $file_entry_row_jq : $file_entry_row_jq, rowClicked : true } );
 }
 
+///////
 
 function showFileDetailsForRow( params ) {
 	
 	var $file_entry_row_jq = params.$file_entry_row_jq;
 	var rowClicked = params.rowClicked;
 	
-	var currentScrollTop = null;
-	
-	if ( rowClicked ) {
-		
-//		currentScrollTop = $file_entry_row_jq.scrollTop();
-		
-//		currentScrollTop = $(window).scrollTop();
-	}
 
-	var $file_list_details_row = $file_entry_row_jq.next();
-	
-	if ( $file_list_details_row.length === 0 ) {
-		throw '$file_list_details_row.length === 0';
-	}
-	
-	if ( ! $file_list_details_row.hasClass("file_list_details_row_jq" ) ) {
-		throw '! $file_list_details_row.hasClass("file_list_details_row_jq"';
-	}
-	
-	
-	var currentlyShowingDetails = $file_list_details_row.is(":visible");
-	
-	
-	if ( currentlyShowingDetails ) {
-		
-		//  hide all details rows
-		
-		$(".file_list_details_row_jq").hide();
-		
-		
-		$(".icon_expand_jq").show();
-		$(".icon_collapse_jq").hide();
+	//  Code to mark the last clicked row with a different color.
+	$(".file_entry_row_jq").removeClass("file-details-row-clicked");
+	$file_entry_row_jq.addClass("file-details-row-clicked");
 
-		return;
-	}
-
-	//  Update icons for expand and collapse
-
-	$(".icon_expand_jq").show();
-	$(".icon_collapse_jq").hide();
-
-	$file_entry_row_jq.find(".icon_expand_jq").hide();
-	$file_entry_row_jq.find(".icon_collapse_jq").show();
-	
-	//  Hide all details rows
-	
-	$(".file_list_details_row_jq").hide();
-	
-	
-	//  Start processing for details for clicked row
-	
-	$file_list_details_row.show();
-	
 	if ( rowClicked ) {
 		
 //		$file_entry_row_jq.scrollTop( file_entry_row_ScrollTop );
 //		$(window).scrollTop( currentScrollTop );
 	}
 	
-	var $file_list_details_holder_jq = $file_list_details_row.find(".file_list_details_holder_jq");
+
+	//  Populate overlay
 	
-	if ( $file_list_details_holder_jq.length === 0 ) {
-		throw '$file_list_details_holder_jq.length === 0';
-	}
 	
-	//  Try to find single_file_info_block under details holder
+	var record_id = $file_entry_row_jq.attr("data-record-id");
+
+	var $file_import_id = $("#file_import_id");
+
+	$file_import_id.val( record_id );
+
+	var $prev_item_status_hidden_Field = $("#prev_item_status");
+
+	$prev_item_status_hidden_Field.val( "" );  //  clear prev status value
 	
-	var $single_file_info_block__under__detailsHolder = $file_list_details_holder_jq.find("#single_file_info_block");
+	var $filename_jq = $file_entry_row_jq.find(".filename_jq");
 	
-	if ( $single_file_info_block__under__detailsHolder.length > 0 ) {
+	var filename = $filename_jq.text();
+
+	$("#upload_details_overlay_filename").text( filename );
+	
+
+	var $mapping_details_link = $("#mapping_details_link");
+	
+	var mapping_details_link_root_URL = $mapping_details_link.attr("data-root-url");
+	
+	var mapping_details_link_URL = mapping_details_link_root_URL + record_id;
+	
+	$mapping_details_link.attr( "href", mapping_details_link_URL );
+	
+	$mapping_details_link.hide();
+	
+
+	
+
+	var $file_upload_details_overlay_div = $("#file_upload_details_overlay_div");
+
+
+	//  Adjust the overlay positon to be within the viewport
+
+	var scrollTopWindow = $(window).scrollTop();
+
+	if ( scrollTopWindow > 0 ) {
+
+		//  User has scrolled down
+
+//		var overlayBackgroundDivTop = $("#lorikeet-modal-dialog-overlay-background").offset().top;
+//
+//		var overlayTop = scrollTopWindow - overlayBackgroundDivTop + 10;
 		
-		//  found so details block already under details row and populated
-		
+		//  Changed since overlay-background is position fixed
+
+		var overlayTop = scrollTopWindow + 10;
+
+		$file_upload_details_overlay_div.css( { top: overlayTop + "px" } );
+
 	} else {
-	
-		//  not found so move here and populate
-	
 
-
-		var record_id = $file_entry_row_jq.attr("data-record-id");
-
-		var $file_import_id = $("#file_import_id");
-
-		$file_import_id.val( record_id );
-
-		var $single_file_info_block = $("#single_file_info_block");
-		
-		if ( $single_file_info_block.length === 0 ) {
-			throw '$single_file_info_block.length === 0';
-		}
-		
-		$single_file_info_block.detach();
-		
-		$single_file_info_block.appendTo( $file_list_details_holder_jq );
-		
-		var $prev_item_status_hidden_Field = $("#prev_item_status");
-		
-		$prev_item_status_hidden_Field.val( "" );  //  clear prev status value
-		
-
-
-		showFile();
+		$file_upload_details_overlay_div.css( { top: "10px" } );
 	}
+
+
+	
+	var $file_upload_details_modal_dialog_overlay_background = $("#file_upload_details_modal_dialog_overlay_background");
+	
+	$file_upload_details_modal_dialog_overlay_background.show();
+	
+	$file_upload_details_overlay_div.show();
+	
+	
+	showFile();
+
 }
 
 
 function is_numeric(str){
     return /^\d+$/.test(str);
 }
-
-
-/////////////
-
-//function initPage() {
-//	
-//	
-//	showFile();
-//		
-//
-//}
-
 
 
 ///////////////
@@ -270,6 +270,20 @@ function processStatus( params ) {
 	var statusData = params.statusData;
 	var file_import_id = params.file_import_id;
 //	var updateOtherFields = params.updateOtherFields;
+	
+	var file_import_id_String = "";
+	
+	if ( file_import_id ) {
+		
+		file_import_id_String = file_import_id.toString();
+	}
+	
+	
+
+	var $file_import_id = $("#file_import_id");
+	
+	var current_file_import_id_from_field = $file_import_id.val();
+
 	
 	
 	if ( statusData.noRecordFound ) {
@@ -283,46 +297,21 @@ function processStatus( params ) {
 			return;  //  no longer on the page
 		}
 
-		
 		var $file_entry_row_jq =  $item_status_cell.closest(".file_entry_row_jq");
-		
-		var $file_list_details_row = $file_entry_row_jq.next();
-		
-		if ( $file_list_details_row.length === 0 ) {
-			throw '$file_list_details_row.length === 0';
-		}
-		
-		if ( ! $file_list_details_row.hasClass("file_list_details_row_jq" ) ) {
-			throw '! $file_list_details_row.hasClass("file_list_details_row_jq"';
-		}
-		
-		
-		//  First move single_file_info_block div out from under 
-		//     $file_list_details_row  before before emptying it 
-		
-
-		var $single_file_info_block = $file_list_details_row.find("#single_file_info_block");
-		
-		if ( $single_file_info_block.length > 0 ) {
-			
-			//  $single_file_info_block was found under $file_list_details_row so it needs 
-			//    to be moved to single_file_info_block_holder before file_list_details_row is removed
-
-			$single_file_info_block.detach();
-			
-			var $single_file_info_block_holder = $("#single_file_info_block_holder");
-
-			$single_file_info_block.appendTo( $single_file_info_block_holder );
-		}
-		
-
-		$file_list_details_row.remove();
 		
 		$file_entry_row_jq.remove();
 		
+
+
+		//  If this row is currently being displayed in the overlay, then close the overlay
+
+		if ( current_file_import_id_from_field === file_import_id_String ) {
+			
+			closeFileImportDetailsOverlay();
+		}
+		
 		return;  // EARLY EXIT
 	}
-	
 
 
 	if ( ! ( statusData.failed || statusData.importComplete || statusData.systemError
@@ -331,6 +320,8 @@ function processStatus( params ) {
 //			|| statusData.status ===  'user input required'    //  TODO  'user input required' is temporary
 					
 					) ) { 
+		
+		//  Update the status on a timer 
 		
 		updateStatusTimerObject.cancel_all_updateStatusTimerId_for__file_import_id( { file_import_id : file_import_id } );
 
@@ -352,7 +343,6 @@ function processStatus( params ) {
 		updateStatusTimerObject.add_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerId, file_import_id : file_import_id } );
 		
 	}
-	
 	
 	
 	var $item_status_cell = $("#item_status_id_" + file_import_id );
@@ -393,6 +383,7 @@ function processStatus( params ) {
 
 	//  replace all the classes to remove the existing status coloring
 	$item_status_holder_jq.attr("class", colorStatusClassNameToAdd );
+	
 
 //	private String status;
 //	
@@ -411,9 +402,6 @@ function processStatus( params ) {
 //	private Integer totalCount;
 		
 
-	var $file_import_id = $("#file_import_id");
-	
-	var current_file_import_id_from_field = $file_import_id.val();
 	
 	var user_entered_file_import_id = $("#user_entered_file_import_id").val();
 	
@@ -421,18 +409,37 @@ function processStatus( params ) {
 		
 		var z = 0;
 	}
-	
-	var file_import_id_String = "";
-	
-	if ( file_import_id ) {
-		
-		file_import_id_String = file_import_id.toString();
-	}
+
 	
 
 	//  If this row is currently being displayed, then update on status change
 
 	if ( current_file_import_id_from_field === file_import_id_String ) {
+		
+		//  update status
+		
+		var $upload_details_overlay_status = $("#upload_details_overlay_status");
+		
+		$upload_details_overlay_status.text( statusData.status );
+		
+		var colorStatusClassNameToAdd = getStatusBackgroundClass( statusData );
+
+		//  replace all the classes to remove the existing status coloring
+		$upload_details_overlay_status.attr("class", colorStatusClassNameToAdd );
+		
+		
+		
+		var $mapping_details_link = $("#mapping_details_link");
+		
+		if ( statusData.userInputRequired || statusData.importComplete || statusData.importProcessing ) {
+			
+			$mapping_details_link.show();
+		} else {
+			
+			$mapping_details_link.hide();
+		}
+		
+		
 
 		if ( statusData.currentProcessCount === undefined || statusData.currentProcessCount === null ) {
 
@@ -479,6 +486,8 @@ function processStatus( params ) {
 			$("#import_complete_status_block").hide();
 		}
 		
+		
+		
 	}
 
 	
@@ -506,6 +515,7 @@ function processStatus( params ) {
 function showFile( params ) {
 	
 
+	
 	$("#no_tax_id_container").hide();
 	$("#general_error_container").hide();
 	
@@ -556,10 +566,6 @@ function showFileProcessResponse( params ) {
 	var ajaxRequestData = params.ajaxRequestData;
 	
 	if ( ajaxResponseData && ajaxResponseData.item ) {
-		
-		var file = ajaxResponseData.item;
-
-		$("#single_file_info_block__filename").text( file.filename );
 		
 		var statusData = ajaxResponseData.statusData;
 
@@ -785,6 +791,9 @@ function showNoTaxonomyProcessResponse( params ) {
 		
 		var suggestion_button_template__template = Handlebars.compile(suggestion_button_template__source);
 
+//		var $spacer_row_template_html = 
+//		$(spacer_row_template_html).appendTo( $no_tax_id_table__tbody );
+		
 //		process the file list
 		for ( var noTaxonomyListIndex = 0; noTaxonomyListIndex < noTaxonomyList.length; noTaxonomyListIndex++ ) {
 
@@ -1456,7 +1465,7 @@ function updateSaveTaxonomyIdsButtonForTaxonomyIdChange() {
 	
 	var allTaxonomyIdsFound = true;
 	
-	var $no_tax_id_table__tbody_tr = $("#no_tax_id_table tbody tr");
+	var $no_tax_id_table__tbody_tr = $("#no_tax_id_table tbody tr.taxonomy_entry_container_jq");
 	
 	$no_tax_id_table__tbody_tr.each( function(  index, element ) {
 		
@@ -1485,3 +1494,53 @@ function updateSaveTaxonomyIdsButtonForTaxonomyIdChange() {
 	}
 }
 
+
+
+
+///  Overlay general processing
+
+var closeFileImportDetailsOverlay = function (  ) {
+
+	$("#file_upload_details_modal_dialog_overlay_background").hide();
+	$(".file-upload-details-overlay-div").hide();
+
+};
+
+///////////////////////////////////////////////////////////////////////////
+
+///  Attach Overlay Click handlers
+
+
+var attachFileImportDetailsOverlayClickHandlers = function (  ) {
+
+	var $view_spectra_overlay_X_for_exit_overlay = $(".file-upload-details-overlay-X-for-exit-overlay");
+	
+	$view_spectra_overlay_X_for_exit_overlay.click( function( eventObject ) {
+
+		closeFileImportDetailsOverlay();
+	} );
+
+	$("#file_upload_details_modal_dialog_overlay_background").click( function( eventObject ) {
+
+		closeFileImportDetailsOverlay();
+	} );
+
+//	$(".file-upload-details-overlay-div").click( function( eventObject ) {
+//
+//		closeFileImportDetailsOverlay();
+//	} );
+
+//	$(".error-message-ok-button").click( function( eventObject ) {
+//
+//		closeFileImportDetailsOverlay();
+//	} );
+
+	
+	
+	
+//	$("#file-upload-details-overlay-div").click( function( eventObject ) {
+//
+//		return false;
+//	} );
+
+};

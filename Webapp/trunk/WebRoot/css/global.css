@@ -1,5 +1,5 @@
 
-.failed-status { background-color: #FFDDDD; }
+.failed-status, .system-error-status { background-color: #FFDDDD; }
 
 .user-input-required-status { background-color: #FFFFDD; }
 
@@ -25,18 +25,127 @@ table#no_tax_id_table th.header-line-number , table#no_tax_id_table td.header-li
 
 
 
-div#submitted_fasta_files table { padding: 0px; margin: 0px; border-spacing: 0px; }
+div.submitted-fasta-files-root table { padding: 0px; margin: 0px; border-spacing: 0px; }
  
 
-div#submitted_fasta_files table { border-collapse: collapse; }
+div.submitted-fasta-files-root table { border-collapse: collapse; }
 
-div#submitted_fasta_files table, div#submitted_fasta_files table th, div#submitted_fasta_files table td {
+div.submitted-fasta-files-root table, div.submitted-fasta-files-root table th, div.submitted-fasta-files-root table td {
    border: 1px solid grey; 
 }
-div#submitted_fasta_files table th, div#submitted_fasta_files table td {
+div.submitted-fasta-files-root table th, div.submitted-fasta-files-root table td {
 	padding-left: 10px; padding-right: 10px; 
 }
 
-div#submitted_fasta_files table th.header-line-number , div#submitted_fasta_files table td.header-line-number { 
+div.submitted-fasta-files-root table th.header-line-number , div.submitted-fasta-files-root table td.header-line-number { 
 	text-align: right; padding-right: 15px; 
 }
+
+
+
+
+
+div.file-import-details-root table { padding: 0px; margin: 0px; border-spacing: 0px; }
+ 
+
+div.file-import-details-root table { border-collapse: collapse; }
+
+div.file-import-details-root table, div.file-import-details-root table th, div.file-import-details-root table td {
+   border: 1px solid grey; 
+}
+div.file-import-details-root table th, div.file-import-details-root table td {
+	padding-left: 10px; padding-right: 10px; 
+}
+
+div.file-import-details-root table th.header-line-number , div.file-import-details-root table td.header-line-number { 
+	text-align: right; padding-right: 15px; 
+}
+
+
+
+.file-details-row-clicked { background-color: #E8E8E8 }
+
+/* -----   File Upload Details  modal dialog background ----- */
+
+
+	/* File Upload Details modal dialog background */
+.file-upload-details-modal-dialog-overlay-background {
+	
+
+	cursor: pointer; /* set mouse to pointer */
+
+	  z-index: 1001;
+	  
+	  background-color: black;
+	opacity: .80;
+	filter: Alpha(Opacity=80);
+
+	  /*  Moved to inline style in header so context is not hard coded
+	background: #666 url(/???context???/css/jquery-ui-1.10.2-Themes/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png) 50% 50% repeat;
+	*/
+	/*  
+	opacity: .50;
+	filter: Alpha(Opacity=50);
+	*/
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+
+/*  File Upload Details Overlay   */
+
+
+div.file-upload-details-overlay-div {
+
+	opacity: 1;
+	filter: Alpha(Opacity=100);
+
+	background-color:white;
+	outline: 0px;
+
+	position: absolute;
+	top: 50px;
+	left: 50px;
+	right: 50px;
+
+	/*
+	height: 400px;
+	*/
+
+/*
+	border: 1px;
+	border-style: solid;
+	border-color: #D3D3D3 ;
+*/
+
+	display: block;
+	z-index: 1002;
+
+}
+
+.file-upload-details-overlay-header { 
+	
+	height: 35px;
+	background-color: black; padding-bottom: 5px;
+
+/*
+	border-width: 0px;
+	border-bottom-width: 1px;
+	border-style: solid;
+	border-color: #D3D3D3 ;
+*/
+ }
+
+.file-upload-details-overlay-X-for-exit-overlay { float: right; border-color: #000000; height:33px; background-color: black; color: white; padding: 3px; margin: 0px;  cursor: pointer;  }
+
+.file-upload-details-overlay-header-text { color: white; padding: 3px; margin: 0px; text-align: center;  }
+
+.file-upload-details-overlay-body {  padding: 20px; }
+
+.file-upload-details-overlay-link { margin-right: 20px;  }
+
+
+

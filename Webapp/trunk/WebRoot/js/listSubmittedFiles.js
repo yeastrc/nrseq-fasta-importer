@@ -37,20 +37,6 @@ function initPage() {
 
 function updateFileList( params ) {
 	
-	
-	//  First move single_file_info_block div out from under 
-	//     submitted_fasta_files div before before emptying it 
-	
-	var $single_file_info_block_holder = $("#single_file_info_block_holder");
-
-	var $single_file_info_block = $("#single_file_info_block");
-	
-	$single_file_info_block.detach();
-	
-	$single_file_info_block.appendTo( $single_file_info_block_holder );
-
-	
-	
 	$("#submitted_fasta_files").empty();
 	
 	var statusArray = null;
@@ -128,9 +114,6 @@ function updateFileListProcessResponse( params ) {
 		var source = $file_list_entry_template.html();
 		var template = Handlebars.compile(source);
 		
-		var $file_list_details_entry_template = $("#file_list_details_entry_template tbody");
-		var file_list_details_entry_template__html = $file_list_details_entry_template.html();
-		
 		//  process the file list
 		for ( var fileListIndex = 0; fileListIndex < fileList.length; fileListIndex++ ) {
 			
@@ -140,19 +123,18 @@ function updateFileListProcessResponse( params ) {
 
 			var html = template(context);
 
-			var $file_list_entry = $(html).appendTo( $submitted_fasta_files_table );
+//			var $file_list_entry = 
+				$(html).appendTo( $submitted_fasta_files_table );
 			
-			var $file_list_details_entry = $(file_list_details_entry_template__html).appendTo( $submitted_fasta_files_table );
-
-			var statusData = fileEntry.statusData;
+//			var statusData = fileEntry.statusData;
 			
-			if ( ! ( statusData.importComplete || statusData.userInputRequired ) ) {
-
-				//  Hide link for details since file may not exist or is incomplete
-				
-				var $mapping_details_link_jq =  $file_list_entry.find(".mapping_details_link_jq");
-				$mapping_details_link_jq.hide();
-			}
+//			if ( ! ( statusData.importComplete || statusData.userInputRequired ) ) {
+//
+//				//  Hide link for details since file may not exist or is incomplete
+//				
+//				var $mapping_details_link_jq =  $file_list_entry.find(".mapping_details_link_jq");
+//				$mapping_details_link_jq.hide();
+//			}
 
 			processStatus( { statusData : fileEntry.statusData , file_import_id : fileEntry.item.id, updateOtherFields : false } );
 				

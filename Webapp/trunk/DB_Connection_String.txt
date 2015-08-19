@@ -1,0 +1,5 @@
+
+
+url="jdbc:mysql://localhost:3306/nrseq_fasta_importer?autoReconnect=true&amp;tcpKeepAlive=true&amp;useUnicode=true&amp;characterEncoding=ISO8859_1&amp;characterSetResults=ISO8859_1"/>
+
+                        

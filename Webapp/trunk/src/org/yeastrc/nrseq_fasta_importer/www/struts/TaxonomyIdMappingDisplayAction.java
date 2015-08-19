@@ -170,7 +170,7 @@ public class TaxonomyIdMappingDisplayAction extends Action {
 		
 	
 
-		return mapping.findForward( "Success" );		
+		return null;		
 	}
 	
 	
