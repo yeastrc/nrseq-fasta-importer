@@ -1,5 +1,6 @@
 package org.yeastrc.nrseq_fasta_importer.www.webservices;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,8 @@ import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedSequenceDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinSequenceDTO;
+import org.yeastrc.nrseq_fasta_importer.objects.FASTAHeaderNoTaxIdDeterminedResponseItem;
+import org.yeastrc.nrseq_fasta_importer.objects.FASTAHeaderNoTaxIdDeterminedSuggestionItem;
 import org.yeastrc.nrseq_fasta_importer.objects.GenericWebserviceResponse;
 import org.yeastrc.nrseq_fasta_importer.objects.UserProvidedTaxonomyId;
 
@@ -40,7 +43,7 @@ public class HeaderNoTaxonomyWebservice {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/list") 
 	
-	public List<FASTAHeaderNoTaxIdDeterminedDTO> list( @QueryParam( "fastaImportTrackingId" ) int fastaImportTrackingId,
+	public List<FASTAHeaderNoTaxIdDeterminedResponseItem> list( @QueryParam( "fastaImportTrackingId" ) int fastaImportTrackingId,
 			@QueryParam( "idGreatThan" ) Integer idGreatThan, // If populated, only return ids > idGreatThan
 			@Context HttpServletRequest request )
 	throws Exception {
@@ -50,27 +53,40 @@ public class HeaderNoTaxonomyWebservice {
 		
 		try {
 			
-			List<FASTAHeaderNoTaxIdDeterminedDTO>  returnList = null;
+			List<FASTAHeaderNoTaxIdDeterminedDTO>  dbList = null;
 			
 			if ( idGreatThan == null ) {
-				returnList = FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingId( fastaImportTrackingId );
+				dbList = FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingId( fastaImportTrackingId );
 			} else {
 				
-				returnList = FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingId_idGreatThan( fastaImportTrackingId, idGreatThan );
+				dbList = FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingId_idGreatThan( fastaImportTrackingId, idGreatThan );
 			}
 			
+			List<FASTAHeaderNoTaxIdDeterminedResponseItem> responseItemList = new ArrayList<>( dbList.size() );
+			
 			//  Get recommended taxonomy id / species id for each entry
-			for ( FASTAHeaderNoTaxIdDeterminedDTO item : returnList ) {
+			for ( FASTAHeaderNoTaxIdDeterminedDTO item : dbList ) {
 				
+				FASTAHeaderNoTaxIdDeterminedResponseItem responseItem = new FASTAHeaderNoTaxIdDeterminedResponseItem();
+				responseItemList.add( responseItem );
+				
+				responseItem.setItem( item );
 				
 				//  If user hasn't entered a taxonomy id, suggest one
 				
-				if ( item.getUserAssignedTaxId() == null ) {
+//				if ( item.getUserAssignedTaxId() == null ) {
 
-					if ( "Spc97-yeast".equals( item.getHeaderName() ) ) {
+//					if ( "Spc97-yeast".equals( item.getHeaderName() ) ) {
+//
+//						int z = 0;
+//					}
 
-						int z = 0;
-					}
+//					if ( "T08A9.3_Modified".equals( item.getHeaderName() ) ) {
+//	
+//						int z = 0;
+//					}
+				
+					
 
 					FASTAHeaderNoTaxIdDeterminedSequenceDTO fASTAHeaderNoTaxIdDeterminedSequenceDTO =
 							FASTAHeaderNoTaxIdDeterminedSequenceDAO.getInstance().getForFastaHeaderNoTaxIdDeterminedId( item.getId() );
@@ -91,29 +107,47 @@ public class HeaderNoTaxonomyWebservice {
 
 						List<YRC_NRSEQ_tblProteinDTO> yrc_NRSEQ_tblProteinDTOList = 
 								YRC_NRSEQ_tblProteinDAO.getInstance().getForSequenceId( sequenceId );
+						
+						if ( yrc_NRSEQ_tblProteinDTOList != null && ( ! yrc_NRSEQ_tblProteinDTOList.isEmpty() ) ) {
+							
+							List<FASTAHeaderNoTaxIdDeterminedSuggestionItem> suggestionItemList = new ArrayList<>();
+							responseItem.setSuggestions(suggestionItemList);
 
-						if ( yrc_NRSEQ_tblProteinDTOList.size() == 1 ) {
+							for ( YRC_NRSEQ_tblProteinDTO yrc_NRSEQ_tblProteinDTO : yrc_NRSEQ_tblProteinDTOList ) {
 
-							YRC_NRSEQ_tblProteinDTO yrc_NRSEQ_tblProteinDTO = yrc_NRSEQ_tblProteinDTOList.get( 0 );
+								if ( yrc_NRSEQ_tblProteinDTO.getSpeciesID() == 0 ) {
+									
+									continue;  //  Skip records where species id == 0
+								}
 
-							List<String> accessionStringList =
-									YRC_NRSEQ_tblProteinDatabaseDAO.getInstance().getAccessionStringListForProteinId( yrc_NRSEQ_tblProteinDTO.getId() );
+//								FASTAHeaderNoTaxIdDeterminedSuggestionItem suggestionItem = new FASTAHeaderNoTaxIdDeterminedSuggestionItem();
+//
+//								suggestionItem.setTaxonomyId( yrc_NRSEQ_tblProteinDTO.getSpeciesID() );
+//								suggestionItemList.add( suggestionItem );
+								
+								//  WAS
+								List<String> accessionStringList =
+										YRC_NRSEQ_tblProteinDatabaseDAO.getInstance().getAccessionStringListForProteinId( yrc_NRSEQ_tblProteinDTO.getId() );
 
-							if ( accessionStringList.size() == 1 ) {
+								for ( String accessionString : accessionStringList ) {
 
-								item.setUserAssignedTaxId( yrc_NRSEQ_tblProteinDTO.getSpeciesID() );
+									if ( item.getHeaderName().equals( accessionString ) ) {
+
+										FASTAHeaderNoTaxIdDeterminedSuggestionItem suggestionItem = new FASTAHeaderNoTaxIdDeterminedSuggestionItem();
+
+										suggestionItem.setTaxonomyId( yrc_NRSEQ_tblProteinDTO.getSpeciesID() );
+
+										suggestionItemList.add( suggestionItem );
+									}
+								}
 							}
 
 						}
-
-
-
-
 					}
-				}				
+//				}				
 			}
 			
-			return returnList;
+			return responseItemList;
 		
 
 		} catch ( WebApplicationException e ) {

@@ -110,6 +110,7 @@ function checkIfFilenameInDB( params ) {
 
 
 	$.ajax({
+		cache: false,
 		type: "GET",
 		url: _URL,
 		dataType: "json",

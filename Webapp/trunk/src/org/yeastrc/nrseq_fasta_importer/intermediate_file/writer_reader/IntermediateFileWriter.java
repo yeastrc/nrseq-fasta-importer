@@ -35,9 +35,9 @@ public class IntermediateFileWriter {
 
 			XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newFactory();
 
-			importFileWriter.xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(outputStream, IntermediateImportFileConstants.XML_CHARSET_UTF_8 );
+			importFileWriter.xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(outputStream, IntermediateImportFileConstants.XML_CHARSET_ISO_8859_1 );
 			
-			importFileWriter.xmlStreamWriter.writeStartDocument( IntermediateImportFileConstants.XML_CHARSET_UTF_8, "1.0" /* version */ );
+			importFileWriter.xmlStreamWriter.writeStartDocument( IntermediateImportFileConstants.XML_CHARSET_ISO_8859_1, "1.0" /* version */ );
 			
 			importFileWriter.xmlStreamWriter.writeStartElement( IntermediateImportFileConstants.ROOT_ELEMENT_NAME );
 			

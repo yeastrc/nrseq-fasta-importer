@@ -35,7 +35,7 @@ public class IntermediateFileReader {
 
 			XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
 
-			intermediateFileReader.xmlStreamReader = xmlInputFactory.createXMLStreamReader(inStream, IntermediateImportFileConstants.XML_CHARSET_UTF_8);
+			intermediateFileReader.xmlStreamReader = xmlInputFactory.createXMLStreamReader( inStream, IntermediateImportFileConstants.XML_CHARSET_ISO_8859_1 );
 			
 			JAXBContext jc = JAXBContext.newInstance( IntermediateFileEntry.class );
 

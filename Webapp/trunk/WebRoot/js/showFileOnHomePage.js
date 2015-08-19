@@ -19,7 +19,7 @@ var UPDATE_PAGE_DATA_DELAY = 1500;  // in milliseconds
 var SHOW_FILE_AFTER_SAVED_TAXONOMY_IDS_DELAY = 1500;  // in milliseconds
 
 
-var TAXONOMY_ID_LOOKUP_TIMER_DELAY = 1300;  // in milliseconds
+var TAXONOMY_ID_LOOKUP_TIMER_DELAY = 500;  // in milliseconds  was 1300
 
 
 //var UPDATE_STATUS_DELAY = 5000;  // in milliseconds
@@ -39,11 +39,6 @@ var lastHeaderNoTaxonomyId = null;
 
 
 
-var updateStatusTimerIds = {};
-
-//  Cached taxonomy string by id
-var taxonomyById = { };
-
 
 //
 //$(document).ready(function()  { 
@@ -53,109 +48,6 @@ var taxonomyById = { };
 //		
 //});
 //	
-
-
-
-
-function add_updateStatusTimerId( params ) {
-	
-	var updateStatusTimerId = params.updateStatusTimerId;
-	var file_import_id = params.file_import_id;
-
-	if ( ! updateStatusTimerIds[ file_import_id ] ) {
-		
-		updateStatusTimerIds[ file_import_id ] = {};
-	}
-	
-	var updateStatusTimerIds_for__file_import_id = updateStatusTimerIds[ file_import_id ];
-	
-	updateStatusTimerIds_for__file_import_id[ updateStatusTimerId ] = updateStatusTimerId;
-}
-
-
-
-function remove_updateStatusTimerId( params ) {
-	
-
-	var updateStatusTimerId = params.updateStatusTimerId;
-	var file_import_id = params.file_import_id;
-	
-//	var updateStatusTimerIdsKeysArray = Object.keys( updateStatusTimerIds );
-	
-
-	if (  updateStatusTimerIds[ file_import_id ] ) {
-
-		var updateStatusTimerIds_for__file_import_id = updateStatusTimerIds[ file_import_id ];
-
-		delete updateStatusTimerIds_for__file_import_id[ updateStatusTimerId ];
-		
-		var updateStatusTimerIdsKeysArray = Object.keys( updateStatusTimerIds_for__file_import_id );
-		
-		if ( updateStatusTimerIdsKeysArray.length === 0  ) {
-			
-			delete updateStatusTimerIds[ file_import_id ];
-		}
-	}	
-
-//	var updateStatusTimerIdsKeysArray = Object.keys( updateStatusTimerIds );
-	
-//	var z = 0;
-	
-}
-
-
-
-
-function cancel_all_updateStatusTimerId_for__file_import_id( params ) {
-	
-	var file_import_id = params.file_import_id;
-	
-
-	if ( updateStatusTimerIds[ file_import_id ] ) {
-
-		var updateStatusTimerIdsPerFileImportId =  updateStatusTimerIds[ file_import_id ];
-
-		var updateStatusTimerIdsPerFileImportIdKeysArray = Object.keys( updateStatusTimerIdsPerFileImportId );
-
-		for ( var subIndex = 0; subIndex < updateStatusTimerIdsPerFileImportIdKeysArray.length; subIndex++ ) {
-
-			var updateStatusTimerIdsPerFileImportIdProperty = updateStatusTimerIdsPerFileImportIdKeysArray[ subIndex ];
-
-			var updateStatusTimerId = updateStatusTimerIdsPerFileImportId[ updateStatusTimerIdsPerFileImportIdProperty ];
-
-			clearTimeout( updateStatusTimerId );
-			
-			remove_updateStatusTimerId( { file_import_id : file_import_id, updateStatusTimerId : updateStatusTimerIdsPerFileImportIdProperty } );
-		}
-	}
-}
-
-///////////
-
-function cancelUpdateStatusTimers() {
-
-	var updateStatusTimerIdsRootKeysArray = Object.keys( updateStatusTimerIds );
-
-	for ( var index = 0; index < updateStatusTimerIdsRootKeysArray.length; index++ ) {
-		
-		var updateStatusTimerIdsRootProperty = updateStatusTimerIdsRootKeysArray[ index ];
-		
-		var updateStatusTimerIdsPerFileImportId =  updateStatusTimerIds[ updateStatusTimerIdsRootProperty ];
-
-		var updateStatusTimerIdsPerFileImportIdKeysArray = Object.keys( updateStatusTimerIdsPerFileImportId );
-		
-		for ( var subIndex = 0; subIndex < updateStatusTimerIdsPerFileImportIdKeysArray.length; subIndex++ ) {
-
-			var updateStatusTimerIdsPerFileImportIdProperty = updateStatusTimerIdsPerFileImportIdKeysArray[ subIndex ];
-
-			var updateStatusTimerId = updateStatusTimerIdsPerFileImportId[ updateStatusTimerIdsPerFileImportIdProperty ];
-
-			clearTimeout( updateStatusTimerId );
-		}
-	}
-	
-	updateStatusTimerIds = {};
-}
 
 
 
@@ -219,7 +111,7 @@ function showFileDetailsForIdInHiddenField(  ) {
 
 		if ( record_id === recordIdFromRow ) {
 		
-			showFileDetailsForRow( $file_entry_row_jq );
+			showFileDetailsForRow( { $file_entry_row_jq : $file_entry_row_jq } );
 			
 			return false;
 		}
@@ -239,11 +131,23 @@ function showFileDetails( clickedLinkElement ) {
 		$file_entry_row_jq = $clickedLinkElement.closest(".file_entry_row_jq");
 	}
 	
-	showFileDetailsForRow( $file_entry_row_jq );
+	showFileDetailsForRow(  { $file_entry_row_jq : $file_entry_row_jq, rowClicked : true } );
 }
 
 
-function showFileDetailsForRow( $file_entry_row_jq ) {
+function showFileDetailsForRow( params ) {
+	
+	var $file_entry_row_jq = params.$file_entry_row_jq;
+	var rowClicked = params.rowClicked;
+	
+	var currentScrollTop = null;
+	
+	if ( rowClicked ) {
+		
+//		currentScrollTop = $file_entry_row_jq.scrollTop();
+		
+//		currentScrollTop = $(window).scrollTop();
+	}
 
 	var $file_list_details_row = $file_entry_row_jq.next();
 	
@@ -288,6 +192,12 @@ function showFileDetailsForRow( $file_entry_row_jq ) {
 	//  Start processing for details for clicked row
 	
 	$file_list_details_row.show();
+	
+	if ( rowClicked ) {
+		
+//		$file_entry_row_jq.scrollTop( file_entry_row_ScrollTop );
+//		$(window).scrollTop( currentScrollTop );
+	}
 	
 	var $file_list_details_holder_jq = $file_list_details_row.find(".file_list_details_holder_jq");
 	
@@ -417,12 +327,12 @@ function processStatus( params ) {
 
 	if ( ! ( statusData.failed || statusData.importComplete || statusData.systemError
 			
-			|| statusData.status === 'queued for validation__' //  TODO  'queued for validation__' is temporary
-			|| statusData.status ===  'user input required'    //  TODO  'user input required' is temporary
+//			|| statusData.status === 'queued for validation__' //  TODO  'queued for validation__' is temporary
+//			|| statusData.status ===  'user input required'    //  TODO  'user input required' is temporary
 					
 					) ) { 
 		
-		cancel_all_updateStatusTimerId_for__file_import_id( { file_import_id : file_import_id } );
+		updateStatusTimerObject.cancel_all_updateStatusTimerId_for__file_import_id( { file_import_id : file_import_id } );
 
 		
 		var updateStatusTimerIdForRemove = null;
@@ -431,7 +341,7 @@ function processStatus( params ) {
 			
 			//  refresh status after delay
 			
-			remove_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerIdForRemove, file_import_id : file_import_id } );
+			updateStatusTimerObject.remove_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerIdForRemove, file_import_id : file_import_id } );
 			
 			updateStatus( {  file_import_id : file_import_id } ); 
 
@@ -439,7 +349,7 @@ function processStatus( params ) {
 		
 		updateStatusTimerIdForRemove = updateStatusTimerId;
 		
-		add_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerId, file_import_id : file_import_id } );
+		updateStatusTimerObject.add_updateStatusTimerId( { updateStatusTimerId : updateStatusTimerId, file_import_id : file_import_id } );
 		
 	}
 	
@@ -614,6 +524,7 @@ function showFile( params ) {
 
 
 	$.ajax({
+		cache: false,
 		type: "GET",
 		url: _URL,
 		dataType: "json",
@@ -648,7 +559,7 @@ function showFileProcessResponse( params ) {
 		
 		var file = ajaxResponseData.item;
 
-		$("#filename").text( file.filename );
+		$("#single_file_info_block__filename").text( file.filename );
 		
 		var statusData = ajaxResponseData.statusData;
 
@@ -690,6 +601,7 @@ function updateStatus( params ) {
 
 
 	$.ajax({
+		cache: false,
 		type: "GET",
 		url: _URL,
 		dataType: "json",
@@ -745,14 +657,7 @@ function showNoTaxonomy( params ) {
 	
 
 	var file_import_id = $("#file_import_id").val();
-	
-	
-//	var $item_status_cell = $("#item_status_id_" + file_import_id );
-//	
-//	var $prev_item_status_jq = $item_status_cell.find(".prev_item_status_jq");
-//	
-//	var prev_item_status_val = $prev_item_status_jq.val();
-	
+
 	
 	var $prev_item_status_hidden_Field = $("#prev_item_status");
 	
@@ -804,6 +709,7 @@ function showNoTaxonomy( params ) {
 
 
 	$.ajax({
+		cache: false,
 		type: "GET",
 		url: _URL,
 		dataType: "json",
@@ -828,6 +734,7 @@ function showNoTaxonomy( params ) {
 	});
 }
 
+///////
 
 function showNoTaxonomyProcessResponse( params ) {
 
@@ -853,19 +760,96 @@ function showNoTaxonomyProcessResponse( params ) {
 		}
 		
 		var template = Handlebars.compile(source);
+		
+		
+		//  Get HTML template for spacer row
+		
+		
+		var $spacer_row_template = $("#spacer_row_template tbody");
+		if ( $spacer_row_template.length === 0 ) {
+			throw '$("#spacer_row_template") not found';
+		}
+		var spacer_row_template_html = $spacer_row_template.html();
+				
+
+//		Get the Handlebars template for an suggestion button and compile it
+		var $suggestion_button_template = $("#suggestion_button_template");
+		if ( $suggestion_button_template.length === 0 ) {
+			throw '$("#suggestion_button_template") not found';
+		}
+		var suggestion_button_template__source = $suggestion_button_template.html();
+		
+		if ( ! suggestion_button_template__source ) {
+			throw '$("#suggestion_button_template").html(); returned no html';
+		}
+		
+		var suggestion_button_template__template = Handlebars.compile(suggestion_button_template__source);
 
 //		process the file list
 		for ( var noTaxonomyListIndex = 0; noTaxonomyListIndex < noTaxonomyList.length; noTaxonomyListIndex++ ) {
 
 			var fileEntry = noTaxonomyList[ noTaxonomyListIndex ];
 			
-			lastHeaderNoTaxonomyId = fileEntry.id;  // assume sorted in ascending id
+			lastHeaderNoTaxonomyId = fileEntry.item.id;  // assume sorted in ascending id
 
 			var context = fileEntry;
 
 			var html = template(context);
 
 			var $no_tax_id_entry = $(html).appendTo( $no_tax_id_table__tbody );
+			
+			//  Update suggestion select if suggestions are provided
+			
+			if ( fileEntry.suggestions && fileEntry.suggestions.length > 0 ) {
+				
+				var $suggestions_holder_jq = $no_tax_id_entry.find(".suggestions_holder_jq");
+				$suggestions_holder_jq.show();
+				
+				var $suggestions_group_jq = $no_tax_id_entry.find(".suggestions_group_jq");
+				
+				for ( var suggestionsIndex = 0; suggestionsIndex < fileEntry.suggestions.length; suggestionsIndex++ ) {
+
+					var suggestion = fileEntry.suggestions[ suggestionsIndex ];
+
+
+					var suggestionButtonContext = suggestion;
+
+					var suggestion_button_html = suggestion_button_template__template( suggestionButtonContext );
+
+					var $suggestion_button_container =
+						$( suggestion_button_html ).appendTo( $suggestions_group_jq );
+
+
+
+					updateSuggestionButtonWithOrganismName( { $suggestion_button_container : $suggestion_button_container, suggestion : suggestion } );
+
+				}
+
+				
+//				var $taxonomy_suggestion_jq = $no_tax_id_entry.find(".taxonomy_suggestion_jq");
+//
+//				$taxonomy_suggestion_jq.show();
+//				
+//				for ( var suggestionsIndex = 0; suggestionsIndex < fileEntry.suggestions.length; suggestionsIndex++ ) {
+//					
+//					var suggestion = fileEntry.suggestions[ suggestionsIndex ];
+//					
+//					var html = '<option value="' + suggestion.taxonomyId + '" >' +
+//						suggestion.taxonomyId +
+////						" : " + 
+////						suggestion.accessionString +
+//						'</option>';
+//					
+//					$( html ).appendTo( $taxonomy_suggestion_jq );
+//					
+//				}
+			}
+			
+			if ( noTaxonomyListIndex < noTaxonomyList.length - 1 ) {
+
+//				var $spacer_row_template_html = 
+					$(spacer_row_template_html).appendTo( $no_tax_id_table__tbody );
+			}
 			
 			var $taxonomy_id_from_user_jq = $no_tax_id_entry.find(".taxonomy_id_from_user_jq");
 
@@ -886,8 +870,48 @@ function showNoTaxonomyProcessResponse( params ) {
 
 
 
+///////////////
 
+function updateSuggestionButtonWithOrganismName( params ) {
+	
+	var $suggestion_button_container = params.$suggestion_button_container;
+	
+	var suggestion = params.suggestion;
+	
+	
+	//  Update the button text with the organism name
+	
 
+	var callbackFcn = function( params ) {
+		
+		var taxonomyData = params.taxonomyData;
+		
+		var scientificName = taxonomyData.scientificName;
+		var scientificNameFound = taxonomyData.scientificNameFound;
+
+		var $suggestion_button_jq = $suggestion_button_container.find(".suggestion_button_jq");
+		
+		
+
+		var taxonomyId = $suggestion_button_jq.attr("data-taxonomy-id");
+		
+		var newButtonValue = taxonomyId + " : " + scientificName;
+		
+		if ( ! scientificNameFound ) {
+			
+			newButtonValue = taxonomyId + " : Unable to determine organism";
+		}
+		
+		$suggestion_button_jq.attr("value", newButtonValue );
+	};
+	
+	
+	ncbiDescriptorFromTaxonomyIdObject.get_NCBIDescriptorForTaxonomyId( { taxonomyId : suggestion.taxonomyId, callbackFcn : callbackFcn } );
+	
+	
+	
+	
+}
 
 ///////////////
 
@@ -916,6 +940,7 @@ function showImportError( params ) {
 
 
 	$.ajax({
+		cache: false,
 		type: "GET",
 		url: _URL,
 		dataType: "json",
@@ -1134,16 +1159,122 @@ function saveTaxonomyIdsCallAJAXProcessResponse( params ) {
 }
 
 
+
+
 ///////////////////////
 
-function taxonomyIdChanged( taxonomyFieldHTMLElement ) {
+//  For <select>
+
+function taxonomySuggestionChanged( taxonomySuggestionFieldHTMLElement ) {
+	
+	var $taxonomySuggestionFieldHTMLElement = $( taxonomySuggestionFieldHTMLElement );
+	
+	var taxonomySuggestionFieldValue = $taxonomySuggestionFieldHTMLElement.val();
+	
+	var $taxonomy_entry_container_jq = $taxonomySuggestionFieldHTMLElement.closest(".taxonomy_entry_container_jq");
+	
+	var $taxonomy_id_from_user_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_from_user_jq");
+	
+	$taxonomy_id_from_user_jq.val( taxonomySuggestionFieldValue );
+	
+	var taxonomy_id_from_userHTMLElement = $taxonomy_id_from_user_jq[0];
+	
+	taxonomyIdChanged( taxonomy_id_from_userHTMLElement );
+}
+
+
+
+///////////////////////
+
+//   For Button
+
+function taxonomySuggestionChosen( taxonomySuggestionFieldHTMLElement ) {
+
+	var $taxonomySuggestionFieldHTMLElement = $( taxonomySuggestionFieldHTMLElement );
+
+	var taxonomySuggestionFieldValue = $taxonomySuggestionFieldHTMLElement.attr("data-taxonomy-id");
+
+	var $taxonomy_entry_container_jq = $taxonomySuggestionFieldHTMLElement.closest(".taxonomy_entry_container_jq");
+
+	var $taxonomy_id_from_user_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_from_user_jq");
+
+	$taxonomy_id_from_user_jq.val( taxonomySuggestionFieldValue );
+
+	var taxonomy_id_from_userHTMLElement = $taxonomy_id_from_user_jq[0];
+
+	taxonomyIdChanged( taxonomy_id_from_userHTMLElement );
+}
+
+
+
+
+
+///////////////////////
+
+
+
+function taxonomyIdChangedUserInputInTextField( taxonomyFieldHTMLElement ) {
 	
 	var $taxonomyFieldHTMLElement = $( taxonomyFieldHTMLElement );
 	
-	saveTaxonomyIdToDBOnChange( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
+
+	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
 	
+	var $taxonomy_id_organism_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_organism_jq");
+	var $taxonomy_id_not_found_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_not_found_jq");
+	
+	$taxonomy_id_not_found_jq.hide();
+	$taxonomy_id_organism_jq.text( "" );
+		
+			
+			
+	
+	var taxonomyIdLookupTimeoutTimerId = $taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr );
+	
+	if ( taxonomyIdLookupTimeoutTimerId ) {
+		
+		clearTimeout( taxonomyIdLookupTimeoutTimerId );
+		
+		$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, null );
+	}
+
+	
+	taxonomyIdLookupTimeoutTimerId = setTimeout( function() {
+		
+		//  Delay the actual lookup of the Organism for the Taxonomy id
+		
+		var taxonomyIdLookupTimeoutTimerId = $taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr );
+		
+		if ( taxonomyIdLookupTimeoutTimerId ) {
+			
+			clearTimeout( taxonomyIdLookupTimeoutTimerId );
+			
+			$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, null );
+		}
+		
+		taxonomyIdChanged( taxonomyFieldHTMLElement );
+			
+	}, TAXONOMY_ID_LOOKUP_TIMER_DELAY );
+	
+	$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, taxonomyIdLookupTimeoutTimerId );
+
+	
+	return false;
+}
+
+
+
+///////////////////////
+
+function taxonomyIdChanged( taxonomyFieldHTMLElement ) {
+
+	var $taxonomyFieldHTMLElement = $( taxonomyFieldHTMLElement );
+
+	saveTaxonomyIdToDBOnChange( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
+
 	lookupOrganismForTaxonomyId( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
 }
+
 
 
 /////////////////////////////
@@ -1157,22 +1288,22 @@ function saveTaxonomyIdToDBOnChange( params ) {
 	var taxonomyFieldHTML_Value = $taxonomyFieldHTMLElement.val();
 
 	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
-	
+
 	var recordIdFromRow = $taxonomy_entry_container_jq.attr("data-record-id");
 
-	
+
 
 	var ajaxRequestData = {
 			noTaxonomyIdRecordId : recordIdFromRow
 	};
-	
+
 	if ( taxonomyFieldHTML_Value && taxonomyFieldHTML_Value !== "" && is_numeric( taxonomyFieldHTML_Value ) ) {
-		
+
 		var taxonomyId = parseInt( taxonomyFieldHTML_Value, 10 );
-		
+
 		ajaxRequestData.taxonomyId = taxonomyId;
 	}
-	
+
 
 	var ajaxRequestDataString = JSON.stringify( ajaxRequestData ); 
 
@@ -1209,78 +1340,79 @@ function saveTaxonomyIdToDBOnChange( params ) {
 
 
 
-
-
-///////////////////////
-
-
-function taxonomyIdKeyUp( taxonomyFieldHTMLElement ) {
-	
-	var $taxonomyFieldHTMLElement = $( taxonomyFieldHTMLElement );
-	
-
-	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
-	
-	var $taxonomy_id_organism_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_organism_jq");
-	var $taxonomy_id_not_found_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_not_found_jq");
-	
-	$taxonomy_id_not_found_jq.hide();
-	$taxonomy_id_organism_jq.text( "" );
-		
-			
-			
-	
-	var taxonomyIdLookupTimeoutTimerId = $taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr );
-	
-	if ( taxonomyIdLookupTimeoutTimerId ) {
-		
-		clearTimeout( taxonomyIdLookupTimeoutTimerId );
-		
-		$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, null );
-	}
-
-	
-	taxonomyIdLookupTimeoutTimerId = setTimeout( function() {
-		
-		lookupOrganismForTaxonomyId( { $taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement } );
-			
-	}, TAXONOMY_ID_LOOKUP_TIMER_DELAY );
-	
-	
-	return false;
-}
-
 /////////
 
 function lookupOrganismForTaxonomyId( params ) {
 
 	var $taxonomyFieldHTMLElement = params.$taxonomyFieldHTMLElement;
 
-	$taxonomyFieldHTMLElement.attr( taxonomyIdLookupTimeoutTimerIdAttr, null );
+	var taxonomyIdString = $taxonomyFieldHTMLElement.val();
 
-	var taxonomyValue = $taxonomyFieldHTMLElement.val();
+	if ( taxonomyIdString === "" ) {
+		
+		var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
 
-	if ( taxonomyValue === "" ) {
-
+		var $taxonomy_id_organism_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_organism_jq");
+		var $taxonomy_id_must_be_integer_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_must_be_integer_jq");
+		var $taxonomy_id_not_found_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_not_found_jq");
+		
+		$taxonomy_id_organism_jq.text("");
+		$taxonomy_id_must_be_integer_jq.hide();
+		$taxonomy_id_not_found_jq.hide();
+		
 		updateSaveTaxonomyIdsButtonForTaxonomyIdChange();
-		return;
+		
+		return;  //  EARLY EXIT
 	}
 
-	if ( taxonomyById[ taxonomyValue ] ) {
+	
+	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
+	
+	var $taxonomy_id_organism_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_organism_jq");
+	var $taxonomy_id_not_found_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_not_found_jq");
+	var $taxonomy_id_must_be_integer_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_must_be_integer_jq");
 
+	$taxonomy_id_not_found_jq.hide();
+	$taxonomy_id_must_be_integer_jq.hide();
+	$taxonomy_id_organism_jq.empty();
+	
+
+
+	if ( ! is_numeric( taxonomyIdString ) ) {
+
+		$taxonomy_id_must_be_integer_jq.show();
+
+		return false;  //  EARLY EXIT
+	}
+	
+	var taxonomyId = parseInt( taxonomyIdString, 10 );
+	
+	if ( isNaN( taxonomyId ) ) {
+		
+		$taxonomy_id_must_be_integer_jq.show();
+
+		return false;  //  EARLY EXIT
+	}
+	
+	
+	var callbackFcn = function( params ) {
+		
+		var taxonomyData = params.taxonomyData;
+		
+//		var scientificName = taxonomyData.scientificName;
+//		var scientificNameFound = taxonomyData.scientificNameFound;
+		
 		updateForOrganismForTaxonomyId(
 				{
 					$taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement,
-					taxonomyData : taxonomyById[ taxonomyValue ]
+					taxonomyData : taxonomyData
 				}
 		);
-
-	} else {
-
-		getOrganismForTaxonomyId( $taxonomyFieldHTMLElement );
-
-	}
-
+	};
+	
+	
+	ncbiDescriptorFromTaxonomyIdObject.get_NCBIDescriptorForTaxonomyId( { taxonomyId : taxonomyId, callbackFcn : callbackFcn } );
+	
 }
 
 
@@ -1292,15 +1424,6 @@ function updateForOrganismForTaxonomyId( params ) {
 
 	var $taxonomyFieldHTMLElement = params.$taxonomyFieldHTMLElement;
 	var taxonomyData = params.taxonomyData;
-
-	var taxonomyId = params.taxonomyId;
-	
-	if ( taxonomyId ) {
-		
-		var taxonomyIdString = taxonomyId.toString();
-	
-		taxonomyById[ taxonomyIdString ] = taxonomyData;
-	}
 
 	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
 	
@@ -1326,99 +1449,7 @@ function updateForOrganismForTaxonomyId( params ) {
 }
 
 
-
-///////////////////////
-
-function getOrganismForTaxonomyId( taxonomyFieldHTMLElement ) {
-
-	
-	var $taxonomyFieldHTMLElement = $( taxonomyFieldHTMLElement );
-	
-	var taxonomyIdString = $taxonomyFieldHTMLElement.val();
-	
-	
-	var $taxonomy_entry_container_jq = $taxonomyFieldHTMLElement.closest(".taxonomy_entry_container_jq");
-	
-	var $taxonomy_id_organism_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_organism_jq");
-	var $taxonomy_id_not_found_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_not_found_jq");
-	var $taxonomy_id_must_be_integer_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_must_be_integer_jq");
-
-	$taxonomy_id_not_found_jq.hide();
-	$taxonomy_id_must_be_integer_jq.hide();
-	$taxonomy_id_organism_jq.empty();
-	
-
-
-	if ( ! is_numeric( taxonomyIdString ) ) {
-//		dataErrorFound = true;
-//		alert( "taxonomy id must be an integer." );
-		
-		$taxonomy_id_must_be_integer_jq.show();
-
-		return false;
-	}
-	
-	var taxonomyId = parseInt( taxonomyIdString, 10 );
-	
-	if ( isNaN( taxonomyId ) ) {
-//		dataErrorFound = true;
-//		alert( "taxonomy id must be an integer." );
-		
-		$taxonomy_id_must_be_integer_jq.show();
-
-		return false;
-	}
-	
-
-	var _URL = contextPathJSVar + "/services/ncbiDataForTaxonomyId/get";
-
-
-	var ajaxRequestData = {
-
-			taxonomyId : taxonomyId
-	};
-
-
-	$.ajax({
-		type: "GET",
-		url: _URL,
-		dataType: "json",
-		data: ajaxRequestData,  //  The data sent as params on the URL
-
-		traditional: true,  //  Force traditional serialization of the data sent
-//		One thing this means is that arrays are sent as the object property instead of object property followed by "[]".
-//		So searchIds array is passed as "searchIds=<value>" which is what Jersey expects
-
-		success: function(data)	{
-
-			getOrganismForTaxonomyIdProcessResponse( 
-					{ ajaxResponseData: data, 
-						taxonomyId : taxonomyId,
-						ajaxRequestData: ajaxRequestData,
-						$taxonomyFieldHTMLElement : $taxonomyFieldHTMLElement
-					});
-
-		},
-		failure: function(errMsg) {
-			handleAJAXFailure( errMsg );
-		},
-		error: function(jqXHR, textStatus, errorThrown) {	
-
-			handleAJAXError( jqXHR, textStatus, errorThrown );
-		}
-	});
-}
-
-
-function getOrganismForTaxonomyIdProcessResponse( params ) {
-
-	updateForOrganismForTaxonomyId( 
-			{ $taxonomyFieldHTMLElement : params.$taxonomyFieldHTMLElement,
-				taxonomyId : params.taxonomyId,
-				taxonomyData : params.ajaxResponseData
-			} );
-	
-}
+///////////
 
 
 function updateSaveTaxonomyIdsButtonForTaxonomyIdChange() {

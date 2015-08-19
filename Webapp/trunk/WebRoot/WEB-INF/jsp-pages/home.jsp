@@ -124,6 +124,9 @@
     		 	<th style="white-space: nowrap; width: 1px;">
     		 		status
     		 	</th>
+    		 	<th style="white-space: nowrap; width: 1px;">
+    		 		
+    		 	</th>
     		 	<th style="white-space: nowrap; padding-left: 10px;">
     		 		filename
     		 	</th>
@@ -145,37 +148,33 @@
     	<table id="file_list_entry_template"  style="display: none;">
     	
     	  <tbody>
-    	   <tr class=" file_entry_row_jq " data-record-id="{{item.id}}"  onclick="showFileDetails(this)"
-    	   		style="cursor: pointer;"
+    	  
+    	   <tr class=" file_entry_row_jq " data-record-id="{{item.id}}"
+    	   		
     	   		>
+    	   		
     	   	<td >
-    	   		<img src="${contextPath}/images/icon-expand-small.png" 
-								class=" icon_expand_jq ">
-    	   		<img src="${contextPath}/images/icon-collapse-small.png" 
-								class=" icon_collapse_jq " style="display: none;">
+    	   		<img src="${contextPath}/images/icon-expand-small.png"   onclick="showFileDetails(this)"
+								class=" icon_expand_jq " style="cursor: pointer;">
+    	   		<img src="${contextPath}/images/icon-collapse-small.png"   onclick="showFileDetails(this)"
+								class=" icon_collapse_jq " style="display: none; cursor: pointer;">
     	   	</td>
     	   	
     	  	<td style="white-space: nowrap; padding-right: 20px;" class=" status_cell_jq " id="item_status_id_{{item.id}}">
     	  		<span data-item-status-holder="true">
     	  			{{item.status}}
     	  		</span>
-    	  		
-    	  		<input type="hidden" class=" prev_item_status_jq " value="">     
     	  	</td>
     	  	
     	  	<td style="white-space: nowrap; padding-left: 10px;">
-    	  		<%-- 
-    	  		<a href="javascript:" onclick="showFileDetails(this)" >
-    	  		--%>
-    	  		{{item.filename}}
-    	  		<%--
+    	  		<a href="taxonomyIdMappingDisplay.do?fastaImportTrackingId={{item.id}}" class=" mapping_details_link_jq " >
+    	  			<%--  Add  target="_blank"  if displaying the file in the browser instead of downloading it --%>
+    	  			view taxonomy mapping details
     	  		</a>
-    	  		--%>
-    	  	<%-- 
-    	  		<a href="showFile.do?id={{item.id}}" >
+    	  	</td>
+    	  	
+    	  	<td style="white-space: nowrap; padding-left: 10px;">
     	  		{{item.filename}}
-    	  		</a>
-    	  	--%>
     	  	</td>
     	  	
     	  	<td style=" padding-left: 10px;">
@@ -192,12 +191,18 @@
     	
     	 <tbody>
     	  <tr  class=" file_list_details_row_jq " style="display: none;">
-    	   <td  class=" file_list_details_holder_jq " colspan="4" style="padding-left: 10px;">  <%--  colspan matches # columns in main table --%>
+    	   <td  class=" file_list_details_holder_jq " colspan="5" style="padding-left: 10px;">  <%--  colspan matches # columns in main table --%>
     	   
     	   </td>
     	  </tr>
     	 </tbody>
     	</table>
+    	
+    	
+    	<%--  The block used for display info on a single file.
+    			
+    			There is only one copy of this block and it is moved around to show the details for a particular file.
+    	 --%>
     	
       <div id="single_file_info_block">
       
@@ -253,6 +258,11 @@
 		
 		
     	<div id="no_tax_id_container"  style="display: none;">
+
+    	  <div style="margin-bottom: 10px;">
+			File:  <span id="single_file_info_block__filename" ></span>
+
+		  </div>
     	
     	  <div style="margin-bottom: 10px;">
     		Unable to determine the taxonomy id for the following headers in the file.
@@ -264,13 +274,19 @@
 		  	Loading...
 		  </div>
 
-	    	<table id="no_tax_id_table"  style="display: none;">
+	    	<table id="no_tax_id_table"  style="display: none; width: 100%; border-width: 0px;">
 	    	
 	    	 <thead>
 	    	  <tr>
 	    	  <th>
+	    	  	<%-- 
 	    	  	taxonomy id
+	    	  	--%>
 	    	  </th>
+	    	  <th>
+	    	  	header
+	    	  </th>
+<%-- 
 	    	  <th>
 	    	  	header name
 	    	  </th>
@@ -280,6 +296,7 @@
 	    	  <th class="header-line-number">
 	    	  	header line number
 	    	  </th>
+--%>	    	  
 	    	  <th>
 	    	  	message
 	    	  </th>
@@ -331,39 +348,130 @@
 	    	<table id="no_tax_id_entry_template"  style="display: none;">
 	    	
 	    	  <tbody>
-	    	   <tr id="taxonomy_entry_container_{{id}}" class=" taxonomy_entry_container_jq  " 
-	    	   		data-record-id="{{id}}" data-header-line-number="{{headerLineNumber}}">
-	    	  	<td>
-	    	  	  <div >
+	    	   <tr id="taxonomy_entry_container_{{item.id}}" class=" taxonomy_entry_container_jq  " 
+	    	   		data-record-id="{{item.id}}" data-header-line-number="{{item.headerLineNumber}}">
+	    	  	
+	    	  	<td style="padding-top: 5px; padding-bottom: 5px;">
+	    	  	
+	    	  	  <div style="">
+	    	  	  	<div style="font-weight: bold;">taxonomy id:</div>
+	    	  	  	
 	    	  		<input type="text" class=" taxonomy_id_from_user_jq " style="width: 80px;" maxlength="14" 
-	    	  			value="{{userAssignedTaxId}}"
-	    	  			onchange="taxonomyIdChanged(this)" oninput="taxonomyIdChanged(this)" onkeyup="taxonomyIdKeyUp(this)" > <%-- --%>
+	    	  			value="{{item.userAssignedTaxId}}"
+	    	  			onchange="taxonomyIdChangedUserInputInTextField(this)" oninput="taxonomyIdChangedUserInputInTextField(this)" onkeyup="taxonomyIdChangedUserInputInTextField(this)" > <%-- --%>
 	    	  		<span class="taxonomy_id_organism_jq"></span>
 	    	  		
 	    	  		<span class=" taxonomy_id_must_be_integer_jq " style="display: none; color: red;">
 	    	  			Taxonomy id must be an integer.</span>
 	    	  		<span class="taxonomy_id_not_found_jq" style="display: none; color: red;">Organism not found for taxonomy id</span>
 	    	  	  </div>
-	    	  	  <div >
-	    	  	  	<a href="blastSequence.do?id={{id}}" target="_blank" >blast sequence</a>
+	    	  	  
+	    	  	  <div style="margin-top: 3px;">
+	    	  	  	<%-- 
+	    	  			<select class=" taxonomy_suggestion_jq "  style="display: none; " onchange="taxonomySuggestionChanged(this)" >
+	    	  				<option value="">Suggestions</option>	
+	    	  			</select>
+	    	  		--%>
+	    	  		
+	    	  		<div class=" suggestions_holder_jq " style="display: none;">
+	    	  			Suggestions:
+	    	  			<div class=" suggestions_group_jq ">
+	    	  			
+	    	  			</div>
+	    	  		
+	    	  		</div>
+<%-- 	    	  		
+					<div style="margin-top: 3px;">
+	    	  	  		<a href="blastSequence.do?id={{item.id}}" target="_blank" >blast sequence</a>
+	    	  	  	</div>
+--%>	    	  	  	
 	    	  	  </div>
 	    	  	</td>
+	    	  	<td style="padding: 0px;border-width: 0px; ">
+
+	    	  	  <table style="width: 100%">
+
+	    	  	   <tr>
+	    	  	   	<td style="width: 1px; white-space: nowrap; font-weight: bold;">
+	    	  	   		Name:
+	    	  	   	</td>
+	    	  	   	<td style="padding-top: 5px; padding-bottom: 5px; font-weight: normal;">
+	    	  	   		{{item.headerName}}
+	    	  	   	</td>
+	    	  	   </tr>
+
+	    	  	   <tr>
+	    	  	   	<td style="border-top-width: 0px; width: 1px;white-space: nowrap; font-weight: bold;">
+	    	  	   		Description:
+	    	  	   	</td>
+	    	  	   	<td style="padding-top: 5px; padding-bottom: 5px; padding-left: 30px;">
+	    	  	   		{{item.headerDescription}}
+	    	  	   	</td>
+	    	  	   </tr>
+	    	  	  
+	    	  	   <tr>
+	    	  	   	<td style="width: 1px;white-space: nowrap; font-weight: bold;">
+	    	  	   		Line Number:
+	    	  	   	</td>
+	    	  	   	<td style="padding-top: 5px; padding-bottom: 5px;padding-left: 30px;">
+	    	  	   		{{item.headerLineNumber}}
+	    	  	   	</td>
+	    	  	   </tr>
+	    	  	  
+	    	  	   <tr>
+	    	  	   	<td>
+	    	  	   		
+	    	  	   	</td>
+	    	  	   	<td style="padding-top: 5px; padding-bottom: 5px;">
+	    	  	   		<a href="blastSequence.do?id={{item.id}}" target="_blank" >blast sequence</a>
+	    	  	   	</td>
+	    	  	   </tr>
+	    	  	   	    	
+	    	  	  
+	    	  	  </table>
+	    	  	
+	    	  	
+	    	  	</td>
+
+<%-- 
 	    	  	<td>
-	    	  		{{headerName}}
+	    	  		{{item.headerName}}
 	    	  	</td>
 	    	  	<td>
-	    	  		{{headerDescription}}
+	    	  		{{item.headerDescription}}
 	    	  	</td>
 	    	  	<td class="header-line-number">
-	    	  		{{headerLineNumber}}
+	    	  		{{item.headerLineNumber}}
 	    	  	</td>
+--%>	    	  	
 	    	  	<td>
-	    	  		{{message}}
+	    	  		{{item.message}}
 	    	  	</td>
 	    	   </tr>
 	    	  </tbody>
 	    	
 	    	</table>
+	    	
+	    	<div id="suggestion_button_template" style="display: none;">
+	    	
+	    		<div class=" suggestion_button_container_jq " style="margin-top: 2px; margin-bottom: 2px;" >
+	    			<input type="button" value="{{taxonomyId}}" class=" suggestion_button_jq " data-taxonomy-id="{{taxonomyId}}" 
+	    				onclick="taxonomySuggestionChosen(this)" >
+	    		</div>
+	    	
+	    	</div>
+	    	
+
+	    	<table id="spacer_row_template"  style="display: none;">
+	    	
+	    	  <tbody>
+	    	   <tr >
+	    	  	<td colspan="3" style="height: 10px; border-width: 0px;">
+	    	  		&nbsp;
+	    	  	</td>
+	    	   </tr>
+	    	  </tbody>
+	    	</table>    	
 	    	
 	    	
 	    <div id="single_file_info_block_holder" style="display: none;">
@@ -373,6 +481,10 @@
     </div>
 
 	<script type="text/javascript" src="${ contextPath }/js/libs/handlebars-v2.0.0.min.js"></script>
+	
+	<script type="text/javascript" src="${ contextPath }/js/localDataCaches.js"></script>
+	
+	<script type="text/javascript" src="${ contextPath }/js/timersManagement.js"></script>
 
 	<script type="text/javascript" src="${ contextPath }/js/listSubmittedFiles.js"></script>
 

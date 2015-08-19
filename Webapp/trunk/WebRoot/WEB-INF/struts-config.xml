@@ -34,10 +34,23 @@
 			<forward name="Success" path="/WEB-INF/jsp-pages/home.jsp" redirect="false" />
 		</action>	
 		
+	
+		<action path="/taxonomyIdMappingDisplay"
+				type="org.yeastrc.nrseq_fasta_importer.www.struts.TaxonomyIdMappingDisplayAction"
+				scope="request"
+				validate="false">
+			
+			<!-- No "Success" forward since write the file to the response.outputstream -->
+				
+			<forward name="NoRecord" path="/WEB-INF/jsp-pages/taxonomyIdMappingDisplayNoRecord.jsp" redirect="false" />
+			<forward name="NoFile" path="/WEB-INF/jsp-pages/taxonomyIdMappingDisplayNoFile.jsp" redirect="false" />
+		</action>			
+		
 		<action path="/blastSequence"
 				type="org.yeastrc.nrseq_fasta_importer.www.struts.BlastSequenceAction"
 				scope="request"
 				validate="false">
+				<!-- No forward since issues redirect on the response object -->
 		</action>			
 		
 		

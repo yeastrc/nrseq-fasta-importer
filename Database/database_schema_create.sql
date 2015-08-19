@@ -1,6 +1,6 @@
 
 DROP SCHEMA IF EXISTS `nrseq_fasta_importer` ;
-CREATE SCHEMA IF NOT EXISTS `nrseq_fasta_importer` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
+CREATE SCHEMA IF NOT EXISTS `nrseq_fasta_importer` DEFAULT CHARACTER SET latin1 ;
 USE `nrseq_fasta_importer` ;
 
 -- -----------------------------------------------------

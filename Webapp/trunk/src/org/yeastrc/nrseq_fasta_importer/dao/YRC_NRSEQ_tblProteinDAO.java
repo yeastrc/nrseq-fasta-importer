@@ -109,7 +109,7 @@ public class YRC_NRSEQ_tblProteinDAO {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		
-		final String sql = "SELECT * FROM tblProtein WHERE sequenceID = ? ";
+		final String sql = "SELECT * FROM tblProtein WHERE sequenceID = ? ORDER BY ID";
 		
 		try {
 			

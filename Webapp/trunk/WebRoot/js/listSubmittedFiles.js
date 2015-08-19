@@ -78,6 +78,7 @@ function updateFileList( params ) {
 
 
 	$.ajax({
+		cache: false,
 		type: "GET",
 		url: _URL,
 		dataType: "json",
@@ -105,7 +106,7 @@ function updateFileList( params ) {
 
 function updateFileListProcessResponse( params ) {
 	
-	cancelUpdateStatusTimers();
+	updateStatusTimerObject.cancelUpdateStatusTimers();
 	
 	var ajaxResponseData = params.ajaxResponseData;
 	var callAfterUpdate = params.callAfterUpdate;
@@ -143,6 +144,15 @@ function updateFileListProcessResponse( params ) {
 			
 			var $file_list_details_entry = $(file_list_details_entry_template__html).appendTo( $submitted_fasta_files_table );
 
+			var statusData = fileEntry.statusData;
+			
+			if ( ! ( statusData.importComplete || statusData.userInputRequired ) ) {
+
+				//  Hide link for details since file may not exist or is incomplete
+				
+				var $mapping_details_link_jq =  $file_list_entry.find(".mapping_details_link_jq");
+				$mapping_details_link_jq.hide();
+			}
 
 			processStatus( { statusData : fileEntry.statusData , file_import_id : fileEntry.item.id, updateOtherFields : false } );
 				

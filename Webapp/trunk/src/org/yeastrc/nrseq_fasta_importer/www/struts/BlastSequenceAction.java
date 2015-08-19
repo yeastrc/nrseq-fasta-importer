@@ -18,7 +18,7 @@ import org.yeastrc.nrseq_fasta_importer.dto.FASTAHeaderNoTaxIdDeterminedSequence
  */
 public class BlastSequenceAction  extends Action {
 
-	private static final Logger log = Logger.getLogger(HomeAction.class);
+	private static final Logger log = Logger.getLogger(BlastSequenceAction.class);
 	
 	private static final String PDR_BLAST_URL_BASE = "http://yeastrc.org/pdr/blastSearchInit.do?query=";
 	
