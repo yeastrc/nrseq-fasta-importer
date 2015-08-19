@@ -12,8 +12,15 @@
 
 
 
-var UPDATE_STATUS_DELAY = 1500;  // in milliseconds
+var UPDATE_STATUS_DELAY_DEFAULT = 5000;  // in milliseconds
+var UPDATE_STATUS_DELAY_DETAILS_DISPLAYED = 1500;  // in milliseconds
 
+//  User input required and user not actively working on it.
+var UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED = 30000;  // in milliseconds
+
+//User input required and user not actively working on it.
+var UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED_OUTSIDE_VIEW_PORT = 300000;  // in milliseconds
+	
 var UPDATE_PAGE_DATA_DELAY = 1500;  // in milliseconds
 
 var SHOW_FILE_AFTER_SAVED_TAXONOMY_IDS_DELAY = 1500;  // in milliseconds
@@ -283,14 +290,21 @@ function processStatus( params ) {
 	var $file_import_id = $("#file_import_id");
 	
 	var current_file_import_id_from_field = $file_import_id.val();
+	
+	var fileImportDetailsDisplayedInOverlay = false;
 
+	if ( current_file_import_id_from_field === file_import_id_String ) {
+		
+		fileImportDetailsDisplayedInOverlay = true;
+	}
+	
+
+	var $item_status_cell = $("#item_status_id_" + file_import_id );
 	
 	
 	if ( statusData.noRecordFound ) {
 		
 		//  not found so remove from page
-
-		var $item_status_cell = $("#item_status_id_" + file_import_id );
 
 		if ( $item_status_cell.length === 0 ) {
 			
@@ -305,7 +319,7 @@ function processStatus( params ) {
 
 		//  If this row is currently being displayed in the overlay, then close the overlay
 
-		if ( current_file_import_id_from_field === file_import_id_String ) {
+		if ( fileImportDetailsDisplayedInOverlay ) {
 			
 			closeFileImportDetailsOverlay();
 		}
@@ -317,8 +331,7 @@ function processStatus( params ) {
 	if ( ! ( statusData.failed || statusData.importComplete || statusData.systemError
 			
 //			|| statusData.status === 'queued for validation__' //  TODO  'queued for validation__' is temporary
-//			|| statusData.status ===  'user input required'    //  TODO  'user input required' is temporary
-					
+			
 					) ) { 
 		
 		//  Update the status on a timer 
@@ -328,6 +341,50 @@ function processStatus( params ) {
 		
 		var updateStatusTimerIdForRemove = null;
 		
+		var statusUpdateDelay = UPDATE_STATUS_DELAY_DEFAULT;
+
+
+		//  If this row is currently being displayed in the overlay, then update the status on different delay
+
+		if ( fileImportDetailsDisplayedInOverlay ) {
+			
+			statusUpdateDelay = UPDATE_STATUS_DELAY_DETAILS_DISPLAYED;
+			
+		} else if ( statusData.userInputRequired ) { //  User input required and user not actively working on it.
+
+			//  10% of UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED
+			
+			var tenPercentOf_UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED = UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED * 0.1;
+			
+			//  Compute 0% to 10% variance of UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED
+			
+			var randomVariance = Math.floor( Math.random() * tenPercentOf_UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED );
+			
+			
+			statusUpdateDelay = UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED + randomVariance;
+			
+			
+			if ( $item_status_cell.length > 0 ) {
+				
+				
+				var itemPositionFromTop = $item_status_cell.offset().top;
+				
+
+				var scrollTopWindow = $(window).scrollTop();
+
+				var viewportHeight = $( window ).height();
+				
+				var bottomOfDisplayedPage = scrollTopWindow + viewportHeight;
+				
+				var bottomOfDisplayedPagePlusFudgeFactor = bottomOfDisplayedPage + 40;
+				
+				if ( itemPositionFromTop > bottomOfDisplayedPagePlusFudgeFactor ) {
+
+					statusUpdateDelay = UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED_OUTSIDE_VIEW_PORT + randomVariance;
+				}
+			}
+		}
+		
 		var updateStatusTimerId = setTimeout( function() {
 			
 			//  refresh status after delay
@@ -336,7 +393,7 @@ function processStatus( params ) {
 			
 			updateStatus( {  file_import_id : file_import_id } ); 
 
-		}, UPDATE_STATUS_DELAY );
+		}, statusUpdateDelay );
 		
 		updateStatusTimerIdForRemove = updateStatusTimerId;
 		
@@ -345,7 +402,6 @@ function processStatus( params ) {
 	}
 	
 	
-	var $item_status_cell = $("#item_status_id_" + file_import_id );
 	
 	var $item_status_cell__Spans = $item_status_cell.find("span");
 	
@@ -414,7 +470,7 @@ function processStatus( params ) {
 
 	//  If this row is currently being displayed, then update on status change
 
-	if ( current_file_import_id_from_field === file_import_id_String ) {
+	if ( fileImportDetailsDisplayedInOverlay ) {
 		
 		//  update status
 		
@@ -495,7 +551,7 @@ function processStatus( params ) {
 
 	//  If this row is currently being displayed, then update on status change
 
-	if ( current_file_import_id_from_field === file_import_id_String ) {
+	if ( fileImportDetailsDisplayedInOverlay ) {
 		
 		if ( statusData.failed ) {
 
