@@ -1,38 +1,39 @@
-package org.yeastrc.nrseq_fasta_importer.uploaded_file;
+package org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir;
 
 import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.ConfigSystemsKeysConstants;
+import org.yeastrc.nrseq_fasta_importer.constants.FileNameAndDirectoryNameConstants;
 import org.yeastrc.nrseq_fasta_importer.dao.ConfigSystemDAO;
 
 /**
  * 
  *
  */
-public class GetTempDirForFileUploads {
+public class Get_FASTA_Importer_Work_Directory_And_SubDirs {
 	
 	
-	private static final Logger log = Logger.getLogger(GetTempDirForFileUploads.class);
+	private static final Logger log = Logger.getLogger(Get_FASTA_Importer_Work_Directory_And_SubDirs.class);
 
 	//  private constructor
-	private GetTempDirForFileUploads() { }
+	private Get_FASTA_Importer_Work_Directory_And_SubDirs() { }
 	
 	/**
 	 * @return newly created instance
 	 */
-	public static GetTempDirForFileUploads getInstance() { 
-		return new GetTempDirForFileUploads(); 
+	public static Get_FASTA_Importer_Work_Directory_And_SubDirs getInstance() { 
+		return new Get_FASTA_Importer_Work_Directory_And_SubDirs(); 
 	}
 
 	/**
 	 * @return true if valid, otherwise throws exception
 	 * @throws Exception
 	 */
-	public boolean validateTempDirForFileUploads() throws Exception {
+	public boolean validate_FASTA_Importer_Work_Directory() throws Exception {
 		
-		File tempDir = getTempDirForFileUploads();
+		File tempDir = get_FASTA_Importer_Work_Directory();
 				
 		return true;
 	}
@@ -41,13 +42,13 @@ public class GetTempDirForFileUploads {
 	 * @return File pointing to temp dir, otherwise throws Exception
 	 * @throws Exception
 	 */
-	public File getTempDirForFileUploads() throws Exception {
+	public File get_FASTA_Importer_Work_Directory() throws Exception {
 		
 
 		String tempDirString = null; 
 				
 		try {
-			tempDirString = ConfigSystemDAO.getInstance().getConfigValueForConfigKey( ConfigSystemsKeysConstants.UPLOADED_FILES_TEMP_DIRECTORY_KEY );
+			tempDirString = ConfigSystemDAO.getInstance().getConfigValueForConfigKey( ConfigSystemsKeysConstants.FASTA_IMPORTER_WORK_DIRECTORY_KEY );
 			
 
 		} catch (Exception e ) {
@@ -61,8 +62,8 @@ public class GetTempDirForFileUploads {
 		
 		if ( StringUtils.isEmpty(tempDirString) ) {
 			
-			String msg = "Upload files temp Dir not found in configuration table. config_key: " 
-					+ ConfigSystemsKeysConstants.UPLOADED_FILES_TEMP_DIRECTORY_KEY ;
+			String msg = "FASTA_Importer_Work_Directory not found in configuration table. config_key: " 
+					+ ConfigSystemsKeysConstants.FASTA_IMPORTER_WORK_DIRECTORY_KEY ;
 			
 			log.error( msg );
 			throw new Exception(msg);
@@ -72,9 +73,9 @@ public class GetTempDirForFileUploads {
 		
 		if ( ! tempDir.exists() ) {
 
-			String msg = "Upload files temp dir does not exist for 'config_key' in configuration table : '" 
-					+ ConfigSystemsKeysConstants.UPLOADED_FILES_TEMP_DIRECTORY_KEY 
-					+ "'.  Upload files temp dir: " + tempDir.getAbsolutePath();
+			String msg = "FASTA_Importer_Work_Directory does not exist for 'config_key' in configuration table : '" 
+					+ ConfigSystemsKeysConstants.FASTA_IMPORTER_WORK_DIRECTORY_KEY 
+					+ "'.  FASTA_Importer_Work_Directory: " + tempDir.getAbsolutePath();
 			
 			log.error( msg );
 			throw new Exception(msg);
@@ -83,4 +84,28 @@ public class GetTempDirForFileUploads {
 		return tempDir;
 		
 	}
+	
+	
+	/**
+	 * @return
+	 */
+	public String getDirForUploadFileTempDir( ) {
+
+		String dirName = FileNameAndDirectoryNameConstants.UPLOAD_FILE_TEMP_DIR;
+		
+		return dirName;
+	}
+	
+	
+	/**
+	 * @return
+	 */
+	public String getDirForImportTrackingId( int importTrackingId ) {
+
+		String dirName = FileNameAndDirectoryNameConstants.IMPORT_DIR_FOR_ID + importTrackingId;
+		
+		return dirName;
+	}
+	
+	
 }
