@@ -180,7 +180,7 @@ public class ProcessImportFASTAFile {
 
 
 
-					if ( ImportStatusContants.STATUS_QUEUED_FOR_VALIDATION.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
+					if ( ImportStatusContants.STATUS_VALIDATION_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
 						
 						importerState = ImporterState.VALIDATING;
 
@@ -192,6 +192,15 @@ public class ProcessImportFASTAFile {
 						//  validation passed
 						
 						currentValidateFASTAFile = null;
+						
+
+
+						String newStatus = ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED;
+
+						currentFastaImportTrackingDTO.setStatus( newStatus );
+
+						FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, currentFastaImportTrackingDTO.getId() );
+
 
 					}					
 
@@ -203,7 +212,7 @@ public class ProcessImportFASTAFile {
 					//  currentFastaImportTrackingDTO.status set to ImportStatusContants.STATUS_QUEUED_FOR_FIND_TAX_IDS
 					//             if validation passes
 
-					if ( ImportStatusContants.STATUS_QUEUED_FOR_FIND_TAX_IDS.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
+					if ( ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
 
 						currentCheckFASTATaxonomyIds = CheckFASTATaxonomyIds.getInstance(); 
 
@@ -214,13 +223,22 @@ public class ProcessImportFASTAFile {
 
 						currentCheckFASTATaxonomyIds = null;
 						
+
+						String newStatus = ImportStatusContants.STATUS_IMPORT_STARTED;
+
+						currentFastaImportTrackingDTO.setStatus( newStatus );
+
+						FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, currentFastaImportTrackingDTO.getId() );
+
+						
+						
 					}
 					
 
 					//  currentFastaImportTrackingDTO.status set to ImportStatusContants.STATUS_QUEUED_FOR_IMPORT
 					//             if Find Taxonomy Ids finds all taxonomy Ids
 
-					if ( ImportStatusContants.STATUS_QUEUED_FOR_IMPORT.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
+					if ( ImportStatusContants.STATUS_IMPORT_STARTED.equals( currentFastaImportTrackingDTO.getStatus() ) ) {
 
 						currentImportFASTAFile = ImportFASTAFile.getInstance(); 
 

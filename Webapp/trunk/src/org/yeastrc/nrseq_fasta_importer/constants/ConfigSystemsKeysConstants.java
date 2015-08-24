@@ -6,7 +6,7 @@ package org.yeastrc.nrseq_fasta_importer.constants;
  */
 public class ConfigSystemsKeysConstants {
 
-	public static final String UPLOADED_FILES_TEMP_DIRECTORY_KEY = "uploaded_files_temp_dir";
+	public static final String FASTA_IMPORTER_WORK_DIRECTORY_KEY = "fasta_importer_work_directory";
 
 
 	

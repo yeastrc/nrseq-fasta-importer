@@ -1,7 +1,9 @@
 
 
+--   Directory on server where this FASTA importer writes files to
+
 INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
-	VALUES ('uploaded_files_temp_dir', '??????');
+	VALUES ('fasta_importer_work_directory', '??????');
 
 
 --   Server URL - Used in link in emails sent
@@ -22,7 +24,7 @@ INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`
 INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
 	VALUES ('email_send_emails', 'false');
 
-
+--  If set email_send_emails to 'true', set these 2 values
 
 INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
 	VALUES ('email_smtp_server_url', '??????');

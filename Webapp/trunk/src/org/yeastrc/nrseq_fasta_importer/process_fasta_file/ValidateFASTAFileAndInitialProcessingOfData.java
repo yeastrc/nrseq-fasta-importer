@@ -13,6 +13,7 @@ import org.yeastrc.fasta.FASTADataErrorException;
 import org.yeastrc.fasta.FASTAEntry;
 import org.yeastrc.fasta.FASTAHeader;
 import org.yeastrc.fasta.FASTAReader;
+import org.yeastrc.nrseq_fasta_importer.constants.FileNameAndDirectoryNameConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.GeneralImportErrorConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
@@ -25,13 +26,12 @@ import org.yeastrc.nrseq_fasta_importer.dto.GeneralImportErrorDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.Tmp_FASTA_header_name_desc_seq_id_DTO;
 import org.yeastrc.nrseq_fasta_importer.dto.Tmp_FASTA_sequence_DTO;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
+import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileHeaderEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.writer_reader.IntermediateFileWriter;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailFailedProcessing;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailSystemError;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
 import org.yeastrc.nrseq_fasta_importer.utils.FASTAValidator;
 import org.yeastrc.nrseq_fasta_importer.utils.TruncateHeaderName;
 
@@ -114,18 +114,19 @@ public class ValidateFASTAFileAndInitialProcessingOfData {
 		int tmp_FASTA_header_name_desc_seq_id_RecordsInserted = 0;
 		int tmp_FASTA_sequence_RecordsInserted = 0;
 		
+		
+		
+		
+		File fasta_Importer_Work_Directory = Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().get_FASTA_Importer_Work_Directory();
 
-		int tempFilenameNumber = fastaImportTrackingDTO.getTempFilenameNumber();
-
-		String tempFilename = GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForUploadedFile( tempFilenameNumber );
-
-		String tempFilenameForGetTaxonomyIdsProcessingString = 
-				GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForGetTaxonomyIdsProcessing( tempFilenameNumber );
-
-		File tempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
-
-		File fastaFile = new File( tempDir, tempFilename );
-		File tempFilenameForGetTaxonomyIdsProcessing = new File( tempDir, tempFilenameForGetTaxonomyIdsProcessingString );
+		String dirNameForImportTrackingId =
+				Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().getDirForImportTrackingId( fastaImportTrackingDTO.getId() );
+		
+		File dirForImportTrackingId  =  new File( fasta_Importer_Work_Directory , dirNameForImportTrackingId );
+		
+		File fastaFile = new File( dirForImportTrackingId, FileNameAndDirectoryNameConstants.UPLOADED_FASTA_FILE );
+		
+		File tempFilenameForGetTaxonomyIdsProcessing = new File( dirForImportTrackingId, FileNameAndDirectoryNameConstants.DATA_TO_GET_TAXONOMY_IDS_FILE );
 
 		
 		Connection tmpValidationDBConnection = null;

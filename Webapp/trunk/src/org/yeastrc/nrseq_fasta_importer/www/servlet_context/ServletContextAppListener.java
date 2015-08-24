@@ -5,10 +5,10 @@ import javax.servlet.http.*;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.WebConstants;
+import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.send_email.GetEmailConfig;
 import org.yeastrc.nrseq_fasta_importer.server_url.GetServerURLConfig;
 import org.yeastrc.nrseq_fasta_importer.threads.ProcessImportFASTAFileThread;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
 
 
 /**
@@ -41,7 +41,7 @@ public class ServletContextAppListener extends HttpServlet implements ServletCon
 		
 		
 		try {
-			GetTempDirForFileUploads.getInstance().validateTempDirForFileUploads(); // throws Exception if error
+			Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().validate_FASTA_Importer_Work_Directory(); // throws Exception if error
 		} catch (Exception e) {
 			//  already logged
 			throw new RuntimeException( e );

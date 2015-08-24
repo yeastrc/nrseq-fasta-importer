@@ -14,17 +14,19 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase.FileSizeLimitExceededException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.yeastrc.nrseq_fasta_importer.constants.FileNameAndDirectoryNameConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.FileUploadConstants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
+import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingFileIdCreatorDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.TempUploadFileIdCreatorDAO;
 import org.yeastrc.nrseq_fasta_importer.dao.YRC_NRSEQ_tblDatabaseDAO;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
+import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.objects.ImportFASTAServletResponse;
 import org.yeastrc.nrseq_fasta_importer.threads.ProcessImportFASTAFileThread;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFileForUploadedFileResult;
 import org.yeastrc.nrseq_fasta_importer.utils.SHA1SumCalculator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,13 +63,82 @@ public class UploadFASTAFileServlet extends HttpServlet {
 		//  For multipart forms (which is what is passed to this servlet), 
 		//  	request.getParameter(...) only comes from the query string
 //		String uploadType = request.getParameter( "uploadTypeQueryString" ); 
+		
+		
+		File uploadedFileOnDisk = null;
 
 		try {
 			
 			String requestURL = request.getRequestURL().toString();
 			
-			File uploadTempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
+			
+			String filename = request.getParameter( "filename" );
+			
+			if ( StringUtils.isEmpty( filename ) ) {
+				
 
+				log.error( "'filename' query parameter is not sent or is empty" );
+				
+				response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
+
+				throw new FailResponseSentException();
+			}
+			
+			Integer tblDatabaseId = YRC_NRSEQ_tblDatabaseDAO.getInstance().getIdForName( filename );
+			
+			if ( tblDatabaseId != null ) {
+
+				log.info( "Filename already in NRSEQ database: " + filename );
+				
+				response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
+				
+				ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
+				
+				importFASTAServletResponse.setStatusSuccess(false);
+				
+				importFASTAServletResponse.setFilenameAlreadyInDB(true);
+				
+				OutputStream responseOutputStream = response.getOutputStream();
+				
+
+				// send the JSON response 
+				ObjectMapper mapper = new ObjectMapper();  //  Jackson JSON library object
+				mapper.writeValue( responseOutputStream, importFASTAServletResponse ); // where first param can be File, OutputStream or Writer
+				
+				responseOutputStream.flush();
+				responseOutputStream.close();
+				
+				throw new FailResponseSentException();
+			}
+			
+			
+			
+			
+			File fasta_Importer_Work_Directory = Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().get_FASTA_Importer_Work_Directory();
+
+			
+			String uploadFileTempDirString =
+					Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().getDirForUploadFileTempDir();
+			
+			File uploadFileTempDir = new File( fasta_Importer_Work_Directory, uploadFileTempDirString );
+			
+			if ( ! uploadFileTempDir.exists() ) {
+				
+				boolean mkdirResult = uploadFileTempDir.mkdir();
+				
+				String msg = "mkdir for uploadFileTempDir failed.  uploadFileTempDir: " + uploadFileTempDir.getAbsolutePath();
+				log.error( msg );
+			}
+			
+			if ( ! uploadFileTempDir.exists() ) {
+				
+				String msg = "uploadFileTempDir does not exist after testing for it and attempting to create it.  uploadFileTempDir: " + uploadFileTempDir.getAbsolutePath();
+				log.error( msg );
+				
+				throw new Exception(msg);
+			}
+			
+			
 			DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
 			
 //					
@@ -89,7 +160,7 @@ public class UploadFASTAFileServlet extends HttpServlet {
 			log.info( "diskFileItemFactory.getSizeThreshold(): '" 
 					+ diskFileItemFactory.getSizeThreshold() + "'" );
 			
-			File diskFileItemFactoryRepository = uploadTempDir; // Put diskFileItemFactory temp files in same directory
+			File diskFileItemFactoryRepository = uploadFileTempDir; // Put diskFileItemFactory temp files in subdirectory directory
 			
 			diskFileItemFactory.setRepository( diskFileItemFactoryRepository );
 
@@ -209,12 +280,44 @@ public class UploadFASTAFileServlet extends HttpServlet {
 					
 					
 					
-				    String fileName = item.getName();
+				    String fileNameForFormObject = item.getName();
 				    String contentType = item.getContentType();
 				    boolean isInMemory = item.isInMemory();
 				    long sizeInBytes = item.getSize();
+				    
+				    
+				    if ( ! filename.equals( fileNameForFormObject ) ) {
+				    	
 
-					log.info( "started Upload for filename " + fileName );
+
+						log.error( "Filename in form does not match filename in query string." );
+						
+						response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
+						
+
+						ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
+						
+						importFASTAServletResponse.setStatusSuccess(false);
+						
+						importFASTAServletResponse.setFilenameInFormNotMatchFilenameInQueryString(true);
+						
+						OutputStream responseOutputStream = response.getOutputStream();
+						
+
+						// send the JSON response 
+						ObjectMapper mapper = new ObjectMapper();  //  Jackson JSON library object
+						mapper.writeValue( responseOutputStream, importFASTAServletResponse ); // where first param can be File, OutputStream or Writer
+						
+						responseOutputStream.flush();
+						responseOutputStream.close();
+						
+						throw new FailResponseSentException();
+				    	
+				    }
+				    
+				    
+
+					log.info( "started Upload for filename " + fileNameForFormObject );
 
 
 					log.info( "item.getSize(): " + item.getSize() );
@@ -224,58 +327,41 @@ public class UploadFASTAFileServlet extends HttpServlet {
 					int tempFilenameNumber = TempUploadFileIdCreatorDAO.getInstance().getNextId();
 							
 					String tempFilename =
-							GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForUploadedFile( tempFilenameNumber );
+							FileNameAndDirectoryNameConstants.UPLOAD_FILE_TEMP_FILENAME 
+							+ tempFilenameNumber
+							+ FileNameAndDirectoryNameConstants.UPLOAD_FILE_TEMP_FILENAME_SUFFIX;
 
 					
-					File tempDir = GetTempDirForFileUploads .getInstance().getTempDirForFileUploads();
+					File tempDir = uploadFileTempDir;
 					
 
-					File uploadedFileOnDisk = new File( tempDir, tempFilename );
+					uploadedFileOnDisk = new File( tempDir, tempFilename );
 					
 					
 					item.write( uploadedFileOnDisk );
 					
 					
-					
-					String uploadedFileSha1sum = SHA1SumCalculator.getInstance().getSHA1Sum( uploadedFileOnDisk );
-					
-					fastaImportTrackingDTO = new FASTAImportTrackingDTO();
-					
-					fastaImportTrackingDTO.setFilename( fileName );
-					fastaImportTrackingDTO.setTempFilenameNumber( tempFilenameNumber );
-					fastaImportTrackingDTO.setSha1sum( uploadedFileSha1sum );
-					fastaImportTrackingDTO.setInsertRequestURL( requestURL );
-					
 
 
-					log.info( "Completed Upload for filename " + fileName );
+					log.info( "Completed transfer to server for user uploaded filename " + fileNameForFormObject );
 
 				}
 
 			}
-			
-			if ( fastaImportTrackingDTO == null ) {
-				
-				String msg = "Should not get here with fastaImportTrackingDTO == null";
-				
-				log.error( msg );
-				
-				throw new Exception(msg);
-			}
-			
-			Integer tblDatabaseId = YRC_NRSEQ_tblDatabaseDAO.getInstance().getIdForName( fastaImportTrackingDTO.getFilename()  );
-			
-			if ( tblDatabaseId != null ) {
 
-				log.info( "Filename already in NRSEQ database: " + fastaImportTrackingDTO.getFilename() );
+			
+			if ( uploadedFileOnDisk == null ) {
+				
+				log.error( "No file uploaded." );
 				
 				response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
 				
+
 				ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
 				
 				importFASTAServletResponse.setStatusSuccess(false);
 				
-				importFASTAServletResponse.setFilenameAlreadyInDB(true);
+				importFASTAServletResponse.setNoUploadedFile(true);
 				
 				OutputStream responseOutputStream = response.getOutputStream();
 				
@@ -290,7 +376,63 @@ public class UploadFASTAFileServlet extends HttpServlet {
 				throw new FailResponseSentException();
 			}
 			
+			///   Have a single file uploaded. Now create a importer work dir and move the file into it.
 			
+			
+			int importTrackingId = FASTAImportTrackingFileIdCreatorDAO.getInstance().getNextId();
+			
+			String dirNameForImportTrackingId =
+					Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().getDirForImportTrackingId( importTrackingId );
+			
+			File dirForImportTrackingId  =  new File( fasta_Importer_Work_Directory , dirNameForImportTrackingId );
+			
+			if ( dirForImportTrackingId.exists() ) {
+				
+				String msg = "dirForImportTrackingId already exists: " + dirForImportTrackingId.getAbsolutePath();
+				log.error( msg );
+				throw new Exception(msg);
+			}
+			
+			if ( ! dirForImportTrackingId.mkdir() ) {
+				
+				String msg = "Failed to make dirForImportTrackingId: " + dirForImportTrackingId.getAbsolutePath();
+				log.error( msg );
+				throw new Exception(msg);
+			}
+			
+			///   move the uploaded file into importer work dir.
+			
+			
+			File uploadedFile_In_dirForImportTrackingId = new File( dirForImportTrackingId, FileNameAndDirectoryNameConstants.UPLOADED_FASTA_FILE );
+			
+			try {
+
+				FileUtils.moveFile( uploadedFileOnDisk, uploadedFile_In_dirForImportTrackingId );
+				
+			} catch ( Exception e ) {
+				
+				String msg = "Failed to move uploaded file to dirForImportTrackingId.  Src file: " + uploadedFileOnDisk
+						+ ", dest file: " + uploadedFile_In_dirForImportTrackingId;
+				
+				log.error( msg, e );
+				
+				throw new Exception(msg, e);
+			}
+			
+			
+			
+			String uploadedFileSha1sum = SHA1SumCalculator.getInstance().getSHA1Sum( uploadedFile_In_dirForImportTrackingId );
+			
+			fastaImportTrackingDTO = new FASTAImportTrackingDTO();
+			
+			fastaImportTrackingDTO.setId( importTrackingId );
+			
+			fastaImportTrackingDTO.setFilename( filename );
+			fastaImportTrackingDTO.setSha1sum( uploadedFileSha1sum );
+			
+			fastaImportTrackingDTO.setInsertRequestURL( requestURL );
+			
+
 
 			fastaImportTrackingDTO.setDescription( fastaDescription );
 			fastaImportTrackingDTO.setEmail( email );
@@ -318,6 +460,8 @@ public class UploadFASTAFileServlet extends HttpServlet {
 			
 			
 		} catch ( FailResponseSentException e ) {
+			
+			cleanupOnError( uploadedFileOnDisk );
 			
 			
 		} catch (FileSizeLimitExceededException ex ) {
@@ -354,6 +498,7 @@ public class UploadFASTAFileServlet extends HttpServlet {
 			responseOutputStream.close();
 			
 
+			cleanupOnError( uploadedFileOnDisk );
 			
 			//  response.sendError  sends a HTML page so don't use here since return JSON instead
 			
@@ -389,6 +534,7 @@ public class UploadFASTAFileServlet extends HttpServlet {
 			responseOutputStream.close();
 			
 
+			cleanupOnError( uploadedFileOnDisk );
 			
 			//  response.sendError  sends a HTML page so don't use here since return JSON instead
 			
@@ -421,6 +567,15 @@ public class UploadFASTAFileServlet extends HttpServlet {
 
 
 
+	}
+	
+	private void cleanupOnError( File uploadedFileOnDisk ) {
+		
+		if ( uploadedFileOnDisk != null && uploadedFileOnDisk.exists() ) {
+			
+			uploadedFileOnDisk.delete();
+		}
+		
 	}
 	
 	

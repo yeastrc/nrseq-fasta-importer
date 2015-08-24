@@ -335,7 +335,19 @@ function uploadFileafterCheckFile() {
                 	progressBarClear();
                 	
                 	alert( "The filename is already in the database: " + filename );
+                	
+                } else if ( resp.filenameInFormNotMatchFilenameInQueryString ) {
 
+                	progressBarClear();
+                	
+                	alert( "Error in Javascript passing filename to server" );
+                	
+                } else if ( resp.noUploadedFile ) {
+
+                	progressBarClear();
+                	
+                	alert( "Error in Javascript passing file to server" );
+                	
                 } else {
                 	
                 	progressBarClear();
@@ -430,7 +442,10 @@ function uploadFileafterCheckFile() {
 
     //  parameters added to the query string are available when the request is first received at the server.
     
-    var postURL = contextPathJSVar + '/uploadFASTA?uploadTypeQueryString=uploadTypeQueryString';
+    
+    var filenameURIEncoded = encodeURIComponent( filename );
+    
+    var postURL = contextPathJSVar + '/uploadFASTA?filename=' + filenameURIEncoded;
     
     xhr.open('POST', postURL);
     xhr.send(formData);

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.yeastrc.nrseq_fasta_importer.constants.FileNameAndDirectoryNameConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.GeneralImportErrorConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.constants.TaxonomyIdNotFoundMaxCountConstants;
@@ -19,6 +20,7 @@ import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.GeneralImportErrorDTO;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterRemoteWebserviceCallErrorException;
+import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileHeaderEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.writer_reader.IntermediateFileReader;
@@ -29,8 +31,6 @@ import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailSystemError;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailUserAttentionRequired;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyId;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdResult;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
 
 /**
  * Get Taxonomy Ids for all FASTA headers
@@ -105,20 +105,20 @@ public class CheckFASTATaxonomyIds {
 
 			try {
 
-				File tempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
+				
+				File fasta_Importer_Work_Directory = Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().get_FASTA_Importer_Work_Directory();
 
-				int tempFilenameNumber = fastaImportTrackingDTO.getTempFilenameNumber();
+				String dirNameForImportTrackingId =
+						Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().getDirForImportTrackingId( fastaImportTrackingDTO.getId() );
+				
+				File dirForImportTrackingId  =  new File( fasta_Importer_Work_Directory , dirNameForImportTrackingId );
+				
+				File tempFilenameForGetTaxonomyIdsProcessingFile = new File( dirForImportTrackingId, FileNameAndDirectoryNameConstants.DATA_TO_GET_TAXONOMY_IDS_FILE );
 
-				String tempFilenameForGetTaxonomyIdsProcessingString = 
-						GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForGetTaxonomyIdsProcessing( tempFilenameNumber );
+				File importFile = new File( dirForImportTrackingId, FileNameAndDirectoryNameConstants.DATA_TO_IMPORT_FILE );
 
-				String tempFilenameForImport = GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForImport( tempFilenameNumber );
-
-
-				File tempFilenameForGetTaxonomyIdsProcessingFile = new File( tempDir, tempFilenameForGetTaxonomyIdsProcessingString );
-
-				File importFile = new File( tempDir, tempFilenameForImport );
-
+				
+				
 				intermediateFileReader = IntermediateFileReader.getInstance( tempFilenameForGetTaxonomyIdsProcessingFile );
 
 				importFileWriter = IntermediateFileWriter.getInstance( importFile );

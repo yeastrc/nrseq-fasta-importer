@@ -18,8 +18,22 @@ public class ImportFASTAServletResponse {
 	private boolean uploadFile_fieldNameInvalid;
 	private boolean moreThanOneuploadedFile;
 	private boolean filenameAlreadyInDB;
+	private boolean filenameInFormNotMatchFilenameInQueryString;
+	private boolean noUploadedFile;
 	
-	
+	public boolean isNoUploadedFile() {
+		return noUploadedFile;
+	}
+	public void setNoUploadedFile(boolean noUploadedFile) {
+		this.noUploadedFile = noUploadedFile;
+	}
+	public boolean isFilenameInFormNotMatchFilenameInQueryString() {
+		return filenameInFormNotMatchFilenameInQueryString;
+	}
+	public void setFilenameInFormNotMatchFilenameInQueryString(
+			boolean filenameInFormNotMatchFilenameInQueryString) {
+		this.filenameInFormNotMatchFilenameInQueryString = filenameInFormNotMatchFilenameInQueryString;
+	}
 	public boolean isFilenameAlreadyInDB() {
 		return filenameAlreadyInDB;
 	}

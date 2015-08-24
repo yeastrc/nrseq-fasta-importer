@@ -15,7 +15,6 @@ public class FASTAImportTrackingDTO {
 	private String status;
 	private String insertRequestURL;
 	private String sha1sum;
-	private int tempFilenameNumber;
 	private int fastaEntryCount;
 	private int getTaxonomyIdsPassNumber;
 	private Integer yrc_nrseq_tblDatabase_id;
@@ -65,12 +64,6 @@ public class FASTAImportTrackingDTO {
 	}
 	public void setSha1sum(String sha1sum) {
 		this.sha1sum = sha1sum;
-	}
-	public int getTempFilenameNumber() {
-		return tempFilenameNumber;
-	}
-	public void setTempFilenameNumber(int tempFilenameNumber) {
-		this.tempFilenameNumber = tempFilenameNumber;
 	}
 	public int getFastaEntryCount() {
 		return fastaEntryCount;

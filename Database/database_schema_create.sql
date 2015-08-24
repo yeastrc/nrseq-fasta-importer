@@ -39,14 +39,13 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `fasta_import_tracking` ;
 
 CREATE TABLE IF NOT EXISTS `fasta_import_tracking` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL,
   `filename` VARCHAR(512) NOT NULL,
   `description` VARCHAR(500) NULL,
   `email` VARCHAR(255) NULL,
   `status` VARCHAR(45) NOT NULL,
   `insert_request_url` VARCHAR(255) NULL,
   `sha1sum` VARCHAR(45) NOT NULL,
-  `temp_filename_number` INT NOT NULL,
   `fasta_entry_count` INT NULL,
   `get_taxonomy_ids_pass_number` INT NOT NULL DEFAULT 0,
   `yrc_nrseq_tblDatabase_id` INT NULL,
@@ -235,4 +234,15 @@ CREATE TABLE IF NOT EXISTS `fasta_header_no_tax_id_determined_sequence` (
     ON UPDATE RESTRICT)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `fasta_import_tracking_id_creator`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `fasta_import_tracking_id_creator` ;
+
+CREATE TABLE IF NOT EXISTS `fasta_import_tracking_id_creator` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB;
 

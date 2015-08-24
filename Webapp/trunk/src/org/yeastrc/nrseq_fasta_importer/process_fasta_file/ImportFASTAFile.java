@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.yeastrc.nrseq_fasta_importer.constants.FileNameAndDirectoryNameConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.GeneralImportErrorConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.dao.FASTAImportTrackingDAO;
@@ -22,14 +23,13 @@ import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinDatabaseDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.YRC_NRSEQ_tblProteinSequenceDTO;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDuplicateFilenameException;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
+import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileHeaderEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.writer_reader.IntermediateFileReader;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailFailedProcessing;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailImportComplete;
 import org.yeastrc.nrseq_fasta_importer.send_email.SendEmailSystemError;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempDirForFileUploads;
-import org.yeastrc.nrseq_fasta_importer.uploaded_file.GetTempLocalFilenameForTempFilenameNumber;
 
 /**
  * 
@@ -81,14 +81,14 @@ public class ImportFASTAFile {
 		
 		try {
 			
-			int tempFilenameNumber = fastaImportTrackingDTO.getTempFilenameNumber();
-			
-			String tempFilenameForImport = GetTempLocalFilenameForTempFilenameNumber.getInstance().getTempLocalFileForImport( tempFilenameNumber );
+			File fasta_Importer_Work_Directory = Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().get_FASTA_Importer_Work_Directory();
 
+			String dirNameForImportTrackingId =
+					Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().getDirForImportTrackingId( fastaImportTrackingDTO.getId() );
 			
-			File tempDir = GetTempDirForFileUploads.getInstance().getTempDirForFileUploads();
-			
-			File importFile = new File( tempDir, tempFilenameForImport );
+			File dirForImportTrackingId  =  new File( fasta_Importer_Work_Directory , dirNameForImportTrackingId );
+
+			File importFile = new File( dirForImportTrackingId, FileNameAndDirectoryNameConstants.DATA_TO_IMPORT_FILE );
 			
 			importFileReader = IntermediateFileReader.getInstance( importFile );
 			

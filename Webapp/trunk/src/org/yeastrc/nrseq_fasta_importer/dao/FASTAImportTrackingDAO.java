@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +12,12 @@ import org.yeastrc.nrseq_fasta_importer.constants.ImportStatusContants;
 import org.yeastrc.nrseq_fasta_importer.db.DBConnectionFactory;
 import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
 
+
+
+/**
+ * 
+ *
+ */
 public class FASTAImportTrackingDAO {
 
 	private static final Logger log = Logger.getLogger(FASTAImportTrackingDAO.class);
@@ -509,17 +514,19 @@ public class FASTAImportTrackingDAO {
 
 		FASTAImportTrackingDTO result = null;
 		
-		Connection conn = null;
+		Connection dbConnection = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		
-		final String sql = "SELECT * FROM fasta_import_tracking WHERE status = ? OR status = ? OR status = ? ORDER BY ID LIMIT 1";
+		final String sql = "SELECT * FROM fasta_import_tracking WHERE status = ? OR status = ? OR status = ? ORDER BY ID LIMIT 1 FOR UPDATE";
 		
 		try {
 			
-			conn = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+			dbConnection = DBConnectionFactory.getConnection( DBConnectionFactory.NRSEQ_FASTA_IMPORTER );
+
+			dbConnection.setAutoCommit(false);
 			
-			pstmt = conn.prepareStatement( sql );
+			pstmt = dbConnection.prepareStatement( sql );
 			pstmt.setString( 1, ImportStatusContants.STATUS_QUEUED_FOR_VALIDATION );
 			pstmt.setString( 2, ImportStatusContants.STATUS_QUEUED_FOR_FIND_TAX_IDS );
 			pstmt.setString( 3, ImportStatusContants.STATUS_QUEUED_FOR_IMPORT );
@@ -531,11 +538,60 @@ public class FASTAImportTrackingDAO {
 				result = populateResultObject( rs );
 			}
 			
+			if ( result != null ) {
+			
+				if ( ImportStatusContants.STATUS_QUEUED_FOR_VALIDATION.equals( result.getStatus() ) ) {
+					
+
+					String newStatus = ImportStatusContants.STATUS_VALIDATION_STARTED;
+
+					result.setStatus( newStatus );
+
+					updateStatus( newStatus, result.getId(), dbConnection );
+					
+				
+				} else if ( ImportStatusContants.STATUS_QUEUED_FOR_FIND_TAX_IDS.equals( result.getStatus() ) ) {
+
+
+					String newStatus = ImportStatusContants.STATUS_FIND_TAX_IDS_STARTED;
+
+					result.setStatus( newStatus );
+
+					updateStatus( newStatus, result.getId(), dbConnection );
+					
+
+				} else if ( ImportStatusContants.STATUS_QUEUED_FOR_IMPORT.equals( result.getStatus() ) ) {
+					
+
+					String newStatus = ImportStatusContants.STATUS_IMPORT_STARTED;
+
+					result.setStatus( newStatus );
+
+					updateStatus( newStatus, result.getId(), dbConnection );
+					
+				}
+
+			}
+
+			dbConnection.commit();
+			
 		} catch ( Exception e ) {
 			
 			String msg = "Failed to select FASTAImportTrackingDTO, sql: " + sql;
 			
 			log.error( msg, e );
+			
+			
+			if ( dbConnection != null ) {
+				
+				try {
+					dbConnection.rollback();
+				} catch (Exception ex) {
+					String msg2 = "Failed dbConnection.rollback() in getNextQueued(...)";
+
+					log.error( msg2, ex );
+				}
+			}
 			
 			throw e;
 			
@@ -553,9 +609,23 @@ public class FASTAImportTrackingDAO {
 				pstmt = null;
 			}
 			
-			if( conn != null ) {
-				try { conn.close(); } catch( Throwable t ) { ; }
-				conn = null;
+
+			if( dbConnection != null ) {
+
+
+				try {
+					dbConnection.setAutoCommit(true);  /// reset for next user of connection
+				} catch (Exception ex) {
+					String msg = "Failed dbConnection.setAutoCommit(true) in getNextQueued(...)";
+
+					log.error( msg, ex );
+				}
+
+				if( dbConnection != null ) {
+					try { dbConnection.close(); } catch( Throwable t ) { ; }
+					dbConnection = null;
+				}
+
 			}
 			
 		}
@@ -652,7 +722,6 @@ public class FASTAImportTrackingDAO {
 		returnItem.setStatus( rs.getString( "status" ) );
 		returnItem.setInsertRequestURL( rs.getString( "insert_request_url" ) );
 		returnItem.setSha1sum( rs.getString( "sha1sum" ) );
-		returnItem.setTempFilenameNumber(  rs.getInt( "temp_filename_number" ));
 		returnItem.setFastaEntryCount( rs.getInt( "fasta_entry_count" ) );
 		returnItem.setGetTaxonomyIdsPassNumber( rs.getInt( "get_taxonomy_ids_pass_number" ) );
 		
@@ -671,14 +740,13 @@ public class FASTAImportTrackingDAO {
 
 
 	//CREATE TABLE fasta_import_tracking (
-//			  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+//			  id INT UNSIGNED NOT NULL ,
 //			  filename VARCHAR(512) NOT NULL,
 //			  description VARCHAR(500) NULL,
 //			  email VARCHAR(255) NULL,
 //			  status VARCHAR(45) NOT NULL,
 //			  insert_request_url VARCHAR(255) NULL DEFAULT NULL
 //			  sha1sum VARCHAR(45) NOT NULL,
-//			  temp_filename_number INT NOT NULL,
 //			  fasta_entry_count INT NULL,
 //			  get_taxonomy_ids_pass_number INT NOT NULL DEFAULT 0,
 //			  yrc_nrseq_tblDatabase_id INT NULL,
@@ -731,14 +799,13 @@ public class FASTAImportTrackingDAO {
 
 
 		//CREATE TABLE fasta_import_tracking (
-//				  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+//				  id INT UNSIGNED NOT NULL ,
 //				  filename VARCHAR(512) NOT NULL,
 //				  description VARCHAR(500) NULL,
 //				  email VARCHAR(255) NULL,
 //				  status VARCHAR(45) NOT NULL,
 //				  insert_request_url VARCHAR(255) NULL DEFAULT NULL
 //				  sha1sum VARCHAR(45) NOT NULL,
-//				  temp_filename_number INT NOT NULL,
 //				  fasta_entry_count INT NULL,
 //				  get_taxonomy_ids_pass_number INT NOT NULL DEFAULT 0,
 //				  yrc_nrseq_tblDatabase_id INT NULL,
@@ -748,16 +815,19 @@ public class FASTAImportTrackingDAO {
 			
 
 
-		final String sql = "INSERT INTO fasta_import_tracking (filename, description, email, status, insert_request_url, sha1sum, temp_filename_number, last_updated_date_time)" +
+		final String sql = "INSERT INTO fasta_import_tracking ( id, filename, description, email, status, insert_request_url, sha1sum, last_updated_date_time )" +
 				" VALUES ( ?, ?, ?, ?, ?, ?, ?, NOW() )";
 
 		try {
 			
 			
-			pstmt = dbConnection.prepareStatement( sql, Statement.RETURN_GENERATED_KEYS );
+//			pstmt = dbConnection.prepareStatement( sql, Statement.RETURN_GENERATED_KEYS );
+			pstmt = dbConnection.prepareStatement( sql );
 			
 			int counter = 0;
 			
+			counter++;
+			pstmt.setInt( counter, item.getId() );
 			counter++;
 			pstmt.setString( counter, item.getFilename() );
 			counter++;
@@ -770,23 +840,21 @@ public class FASTAImportTrackingDAO {
 			pstmt.setString( counter, item.getInsertRequestURL() );
 			counter++;
 			pstmt.setString( counter, item.getSha1sum() );
-			counter++;
-			pstmt.setInt( counter, item.getTempFilenameNumber() );
 			
 			pstmt.executeUpdate();
 			
-			rs = pstmt.getGeneratedKeys();
-
-			if( rs.next() ) {
-				item.setId( rs.getInt( 1 ) );
-			} else {
-				
-				String msg = "Failed to insert FASTAImportTrackingDTO, generated key not found.";
-				
-				log.error( msg );
-				
-				throw new Exception( msg );
-			}
+//			rs = pstmt.getGeneratedKeys();
+//
+//			if( rs.next() ) {
+//				item.setId( rs.getInt( 1 ) );
+//			} else {
+//				
+//				String msg = "Failed to insert FASTAImportTrackingDTO, generated key not found.";
+//				
+//				log.error( msg );
+//				
+//				throw new Exception( msg );
+//			}
 			
 			
 		} catch ( Exception e ) {
@@ -936,7 +1004,7 @@ public class FASTAImportTrackingDAO {
 			
 		}
 		
-		FASTAImportTrackingHistoryDAO.getInstance().save( status, id /* fastaImportTrackingId */ );		
+		FASTAImportTrackingHistoryDAO.getInstance().save( status, id /* fastaImportTrackingId */, dbConnection );		
 	}
 	
 	
@@ -1115,19 +1183,5 @@ public class FASTAImportTrackingDAO {
 		
 	}
 
-	//CREATE TABLE fasta_import_tracking (
-//			  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-//			  filename VARCHAR(512) NOT NULL,
-//			  description VARCHAR(500) NULL,
-//			  email VARCHAR(255) NULL,
-//			  status VARCHAR(45) NOT NULL,
-//			  sha1sum VARCHAR(45) NOT NULL,
-//			  temp_filename VARCHAR(255) NOT NULL,
-//			  temp_filename_for_import VARCHAR(255) NOT NULL,
-//			  fasta_entry_count INT NULL,
-//			  yrc_nrseq_tblDatabase_id INT NULL,
-//			  upload_date_time TIMESTAMP NOT NULL,
-//			  last_updated_date_time TIMESTAMP NULL,
-		
 	
 }
