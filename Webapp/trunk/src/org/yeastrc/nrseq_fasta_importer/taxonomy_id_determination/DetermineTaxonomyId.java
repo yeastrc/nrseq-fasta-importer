@@ -9,6 +9,7 @@ import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.Taxono
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_BracketSpecies_inDescription;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_Flybase_inDescription;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_KeratinUbiquitinContaminants_inDescription;
+import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_OrganismName_inDescription;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_SGD_inDescription;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_SwissProt_inDescription;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups.TaxonomyIdFrom_Tax_Id_inDescription;
@@ -46,7 +47,9 @@ public class DetermineTaxonomyId {
 		
 		TaxonomyIdFrom_Tax_Id_inDescription.getInstance(),
 		
-		TaxonomyIdFrom_BracketSpecies_inDescription.getInstance(), 
+		TaxonomyIdFrom_BracketSpecies_inDescription.getInstance(),
+		
+		TaxonomyIdFrom_OrganismName_inDescription.getInstance(), 
 		
 		TaxonomyIdFrom_UniprotSpeciesString_inDescription.getInstance(),
 		

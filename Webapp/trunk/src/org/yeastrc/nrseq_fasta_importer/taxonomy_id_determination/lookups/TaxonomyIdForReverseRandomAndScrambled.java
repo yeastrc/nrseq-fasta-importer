@@ -56,7 +56,7 @@ public class TaxonomyIdForReverseRandomAndScrambled implements TaxonomyIdLookupI
 			}
 
 			// If this is a randomized sequence, return 0
-			if ( headerName.startsWith( "random_seq_" ) 
+			else if ( headerName.startsWith( "random_seq_" ) 
 					|| headerName.startsWith( "rand_" )
 					
 					// If this is a scrambled sequence, return 0
@@ -65,6 +65,10 @@ public class TaxonomyIdForReverseRandomAndScrambled implements TaxonomyIdLookupI
 				
 				taxonomyId = 0;
 			}
+			
+			// if this is a decoy sequence, return 0
+			else if( headerName.startsWith( "DECOY_" ) )
+				taxonomyId = 0;
 		}
 		
 		determineTaxonomyIdResult.setTaxonomyId( taxonomyId );
