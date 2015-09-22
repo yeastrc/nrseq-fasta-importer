@@ -19,8 +19,28 @@ public class FASTAImportTrackingDTO {
 	private int getTaxonomyIdsPassNumber;
 	private Integer yrc_nrseq_tblDatabase_id;
 	
+	private boolean import_decoy_sequences;
+	private boolean require_confirm_before_insert;
+	
 	private Date uploadDateTime;
 	private Date lastUpdatedDateTime;
+	
+	
+	
+	public boolean isImport_decoy_sequences() {
+		return import_decoy_sequences;
+	}
+	public void setImport_decoy_sequences(boolean import_decoy_sequences) {
+		this.import_decoy_sequences = import_decoy_sequences;
+	}
+	public boolean isRequire_confirm_before_insert() {
+		return require_confirm_before_insert;
+	}
+	public void setRequire_confirm_before_insert(
+			boolean require_confirm_before_insert) {
+		this.require_confirm_before_insert = require_confirm_before_insert;
+	}
+
 	
 	
 	public int getId() {

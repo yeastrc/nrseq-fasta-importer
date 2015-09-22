@@ -220,6 +220,27 @@ function uploadFileafterCheckFile() {
 		if ( emailElement ) {
 			email = emailElement.value;
 		}
+		
+		var import_decoy_sequences = false;
+		
+		var import_decoy_sequencesElement = document.getElementById("import_decoy_sequences");
+		
+		if ( import_decoy_sequencesElement.checked ) {
+			
+			import_decoy_sequences = true;
+		} else {
+
+		}
+		
+		var require_confirm_before_insert = false;
+		
+		var require_confirm_before_insertElement = document.getElementById("require_confirm_before_insert");
+		if ( require_confirm_before_insertElement.checked ) {
+			
+			require_confirm_before_insert = true;
+		} else {
+		}
+		
 
 //		if ( fastaDescription === "" ) {
 //
@@ -240,9 +261,10 @@ function uploadFileafterCheckFile() {
 		formData = new FormData();
 		formData.append( 'uploadFASTAFile', file, file.name );
 
-		formData.append( 'fastaDescription', fastaDescription );  // description, sent as part of the multipart form
+		formData.append( 'fastaDescription', fastaDescription );  // sent as part of the multipart form
 
-		formData.append( 'email', email );  // description, sent as part of the multipart form
+		formData.append( 'email', email );  // sent as part of the multipart form
+
 
 //		formData.append( 'uploadTypeInForm', "uploadTypeInForm" ); // sent as part of the multipart form
 
@@ -445,7 +467,12 @@ function uploadFileafterCheckFile() {
     
     var filenameURIEncoded = encodeURIComponent( filename );
     
-    var postURL = contextPathJSVar + '/uploadFASTA?filename=' + filenameURIEncoded;
+    var postURL = contextPathJSVar + "/uploadFASTA?"
+    	+ "filename=" + filenameURIEncoded
+    	+ "&import_decoy_sequences=" + import_decoy_sequences
+    	+ "&require_confirm_before_insert=" + require_confirm_before_insert;
+
+
     
     xhr.open('POST', postURL);
     xhr.send(formData);

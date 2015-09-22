@@ -73,7 +73,9 @@ public class UploadFASTAFileServlet extends HttpServlet {
 			
 			
 			String filename = request.getParameter( "filename" );
-			
+			String import_decoy_sequences = request.getParameter( "import_decoy_sequences" );
+			String require_confirm_before_insert = request.getParameter( "require_confirm_before_insert" );
+
 			if ( StringUtils.isEmpty( filename ) ) {
 				
 
@@ -84,34 +86,64 @@ public class UploadFASTAFileServlet extends HttpServlet {
 				throw new FailResponseSentException();
 			}
 			
-			Integer tblDatabaseId = YRC_NRSEQ_tblDatabaseDAO.getInstance().getIdForName( filename );
 			
-			if ( tblDatabaseId != null ) {
+			
+			if ( StringUtils.isEmpty( import_decoy_sequences ) ) {
+				
 
-				log.info( "Filename already in NRSEQ database: " + filename );
+				log.error( "'import_decoy_sequences' query parameter is not sent or is empty" );
 				
 				response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
-				
-				ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
-				
-				importFASTAServletResponse.setStatusSuccess(false);
-				
-				importFASTAServletResponse.setFilenameAlreadyInDB(true);
-				
-				OutputStream responseOutputStream = response.getOutputStream();
-				
 
-				// send the JSON response 
-				ObjectMapper mapper = new ObjectMapper();  //  Jackson JSON library object
-				mapper.writeValue( responseOutputStream, importFASTAServletResponse ); // where first param can be File, OutputStream or Writer
-				
-				responseOutputStream.flush();
-				responseOutputStream.close();
-				
 				throw new FailResponseSentException();
 			}
 			
 			
+			
+			if ( StringUtils.isEmpty( require_confirm_before_insert ) ) {
+				
+
+				log.error( "'require_confirm_before_insert' query parameter is not sent or is empty" );
+				
+				response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
+
+				throw new FailResponseSentException();
+			}
+
+			
+			boolean import_decoy_sequencesBoolean = Boolean.parseBoolean( import_decoy_sequences );
+			boolean require_confirm_before_insertBoolean = Boolean.parseBoolean( require_confirm_before_insert );
+
+			{
+
+				Integer tblDatabaseId = YRC_NRSEQ_tblDatabaseDAO.getInstance().getIdForName( filename );
+
+				if ( tblDatabaseId != null ) {
+
+					log.info( "Filename already in NRSEQ database: " + filename );
+
+					response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
+
+					ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
+
+					importFASTAServletResponse.setStatusSuccess(false);
+
+					importFASTAServletResponse.setFilenameAlreadyInDB(true);
+
+					OutputStream responseOutputStream = response.getOutputStream();
+
+
+					// send the JSON response 
+					ObjectMapper mapper = new ObjectMapper();  //  Jackson JSON library object
+					mapper.writeValue( responseOutputStream, importFASTAServletResponse ); // where first param can be File, OutputStream or Writer
+
+					responseOutputStream.flush();
+					responseOutputStream.close();
+
+					throw new FailResponseSentException();
+				}
+
+			}
 			
 			
 			File fasta_Importer_Work_Directory = Get_FASTA_Importer_Work_Directory_And_SubDirs.getInstance().get_FASTA_Importer_Work_Directory();
@@ -286,34 +318,39 @@ public class UploadFASTAFileServlet extends HttpServlet {
 				    long sizeInBytes = item.getSize();
 				    
 				    
-				    if ( ! filename.equals( fileNameForFormObject ) ) {
-				    	
+				    filename = fileNameForFormObject;  // re-assign filename to the filename from the form
+				    
+					{
+
+						Integer tblDatabaseId = YRC_NRSEQ_tblDatabaseDAO.getInstance().getIdForName( fileNameForFormObject );
+
+						if ( tblDatabaseId != null ) {
+
+							log.info( "Filename already in NRSEQ database: " + fileNameForFormObject );
+
+							response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
+
+							ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
+
+							importFASTAServletResponse.setStatusSuccess(false);
+
+							importFASTAServletResponse.setFilenameAlreadyInDB(true);
+
+							OutputStream responseOutputStream = response.getOutputStream();
 
 
-						log.error( "Filename in form does not match filename in query string." );
-						
-						response.setStatus( HttpServletResponse.SC_BAD_REQUEST /* 400  */ );
-						
+							// send the JSON response 
+							ObjectMapper mapper = new ObjectMapper();  //  Jackson JSON library object
+							mapper.writeValue( responseOutputStream, importFASTAServletResponse ); // where first param can be File, OutputStream or Writer
 
-						ImportFASTAServletResponse importFASTAServletResponse = new ImportFASTAServletResponse();
-						
-						importFASTAServletResponse.setStatusSuccess(false);
-						
-						importFASTAServletResponse.setFilenameInFormNotMatchFilenameInQueryString(true);
-						
-						OutputStream responseOutputStream = response.getOutputStream();
-						
+							responseOutputStream.flush();
+							responseOutputStream.close();
 
-						// send the JSON response 
-						ObjectMapper mapper = new ObjectMapper();  //  Jackson JSON library object
-						mapper.writeValue( responseOutputStream, importFASTAServletResponse ); // where first param can be File, OutputStream or Writer
-						
-						responseOutputStream.flush();
-						responseOutputStream.close();
-						
-						throw new FailResponseSentException();
-				    	
-				    }
+							throw new FailResponseSentException();
+						}
+
+					}
+					
 				    
 				    
 
@@ -436,6 +473,9 @@ public class UploadFASTAFileServlet extends HttpServlet {
 
 			fastaImportTrackingDTO.setDescription( fastaDescription );
 			fastaImportTrackingDTO.setEmail( email );
+			
+			fastaImportTrackingDTO.setImport_decoy_sequences(import_decoy_sequencesBoolean);
+			fastaImportTrackingDTO.setRequire_confirm_before_insert( require_confirm_before_insertBoolean );
 
 			FASTAImportTrackingDAO.getInstance().save( fastaImportTrackingDTO );
 			

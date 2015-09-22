@@ -70,6 +70,20 @@
 			email address: <input type="text" id="email" maxlength="255" style="width: 220px;">
 		  </div>         
 	    </c:if>
+	    
+	    <div  style="margin-top: 12px;" >
+	    
+	    	<label>import decoy sequences: <input type="checkbox" id="import_decoy_sequences"></label>
+	    
+	    </div>
+	    
+	    <div  style="margin-top: 12px;" >
+	    
+	    	<label>Require confirmation before insert to database: 
+	    	<input type="checkbox" id="require_confirm_before_insert" checked="checked"></label>
+	    
+	    </div>
+	    
 	        
 		<div style="margin-top: 12px;" >
 		
@@ -220,7 +234,13 @@
 	    	  		<span id="upload_details_overlay_status"></span>
 
 			  </div>
+			  			    
 			  			      	  	
+	    	  <div style="margin-bottom: 10px;" id="confirm_do_import_container">
+	    	  		<input type="button" value="Confirm Do Import"
+	    	  			onclick="confirmDoImportStep()">
+			  </div>
+	           
 	    	  <div style="margin-bottom: 10px;">
 	    	  		<a href="" id="mapping_details_link"
 	    	  			data-root-url="taxonomyIdMappingDisplay.do?fastaImportTrackingId=">

@@ -274,6 +274,10 @@ public class SubmittedFilesWebservice {
 			
 			getStatusResult.setUserInputRequired(true);
 			
+		} else if ( ImportStatusContants.STATUS_USER_CONFIRMATION_REQUIRED.equals( status ) ) {
+			
+			getStatusResult.setUserConfirmationRequired(true);
+			
 		} else if ( ImportStatusContants.STATUS_IMPORT_STARTED.equals( status ) ) {
 			
 			getStatusResult.setImportProcessing(true);
@@ -332,6 +336,7 @@ public class SubmittedFilesWebservice {
 		private boolean validationProcessing;
 		private boolean findTaxIdsProcessing;
 		private boolean userInputRequired;
+		private boolean userConfirmationRequired;
 		private boolean importProcessing;
 		private boolean failed;
 		private boolean importComplete;
@@ -347,6 +352,12 @@ public class SubmittedFilesWebservice {
 		
 		
 		
+		public boolean isUserConfirmationRequired() {
+			return userConfirmationRequired;
+		}
+		public void setUserConfirmationRequired(boolean userConfirmationRequired) {
+			this.userConfirmationRequired = userConfirmationRequired;
+		}
 		public Integer getCurrentProcessCount() {
 			return currentProcessCount;
 		}

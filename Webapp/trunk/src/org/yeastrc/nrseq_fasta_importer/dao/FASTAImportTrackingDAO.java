@@ -731,6 +731,9 @@ public class FASTAImportTrackingDAO {
 			returnItem.setYrc_nrseq_tblDatabase_id( yrc_nrseq_tblDatabase_id );
 		}
 		
+		returnItem.setImport_decoy_sequences( rs.getBoolean( "import_decoy_sequences" ) );
+		returnItem.setRequire_confirm_before_insert( rs.getBoolean( "require_confirm_before_insert" ) );
+		
 		returnItem.setUploadDateTime( rs.getDate( "upload_date_time" ) );
 		returnItem.setLastUpdatedDateTime( rs.getDate( "last_updated_date_time" ) );
 		
@@ -750,6 +753,8 @@ public class FASTAImportTrackingDAO {
 //			  fasta_entry_count INT NULL,
 //			  get_taxonomy_ids_pass_number INT NOT NULL DEFAULT 0,
 //			  yrc_nrseq_tblDatabase_id INT NULL,
+//	  			import_decoy_sequences TINYINT NULL,
+//	  			require_confirm_before_insert TINYINT NULL,
 //			  upload_date_time TIMESTAMP NOT NULL,
 //			  last_updated_date_time TIMESTAMP NULL,
 			  
@@ -796,8 +801,6 @@ public class FASTAImportTrackingDAO {
 		String status = ImportStatusContants.STATUS_QUEUED_FOR_VALIDATION;
 
 
-
-
 		//CREATE TABLE fasta_import_tracking (
 //				  id INT UNSIGNED NOT NULL ,
 //				  filename VARCHAR(512) NOT NULL,
@@ -809,14 +812,16 @@ public class FASTAImportTrackingDAO {
 //				  fasta_entry_count INT NULL,
 //				  get_taxonomy_ids_pass_number INT NOT NULL DEFAULT 0,
 //				  yrc_nrseq_tblDatabase_id INT NULL,
+//				  import_decoy_sequences TINYINT NULL,
+//				  require_confirm_before_insert TINYINT NULL,
 //				  upload_date_time TIMESTAMP NOT NULL,
 //				  last_updated_date_time TIMESTAMP NULL,
 				  
 			
 
 
-		final String sql = "INSERT INTO fasta_import_tracking ( id, filename, description, email, status, insert_request_url, sha1sum, last_updated_date_time )" +
-				" VALUES ( ?, ?, ?, ?, ?, ?, ?, NOW() )";
+		final String sql = "INSERT INTO fasta_import_tracking ( id, filename, description, email, status, insert_request_url, sha1sum, import_decoy_sequences, require_confirm_before_insert, last_updated_date_time )" +
+				" VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW() )";
 
 		try {
 			
@@ -840,6 +845,10 @@ public class FASTAImportTrackingDAO {
 			pstmt.setString( counter, item.getInsertRequestURL() );
 			counter++;
 			pstmt.setString( counter, item.getSha1sum() );
+			counter++;
+			pstmt.setBoolean( counter, item.isImport_decoy_sequences() );
+			counter++;
+			pstmt.setBoolean( counter, item.isRequire_confirm_before_insert() );
 			
 			pstmt.executeUpdate();
 			

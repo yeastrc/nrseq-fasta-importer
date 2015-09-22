@@ -25,6 +25,8 @@ var UPDATE_PAGE_DATA_DELAY = 1500;  // in milliseconds
 
 var SHOW_FILE_AFTER_SAVED_TAXONOMY_IDS_DELAY = 1500;  // in milliseconds
 
+var SHOW_FILE_AFTER_CONFIRM_DO_IMPORT_DELAY = 500;  // in milliseconds
+
 
 var TAXONOMY_ID_LOOKUP_TIMER_DELAY = 500;  // in milliseconds  was 1300
 
@@ -84,6 +86,10 @@ function getStatusBackgroundClass( statusData ) {
 	} else if ( statusData.userInputRequired ) {
 
 		colorStatusClassNameToAdd = "user-input-required-status";
+
+	} else if ( statusData.userConfirmationRequired ) {
+
+		colorStatusClassNameToAdd = "user-input-confirmation-required-status";
 
 	} else if ( statusData.importComplete ) {
 
@@ -211,6 +217,10 @@ function showFileDetailsForRow( params ) {
 
 	$("#upload_details_overlay_filename").text( filename );
 	
+	
+	var $confirm_do_import_container = $("#confirm_do_import_container");
+	$confirm_do_import_container.hide();
+
 
 	var $mapping_details_link = $("#mapping_details_link");
 	
@@ -221,6 +231,7 @@ function showFileDetailsForRow( params ) {
 	$mapping_details_link.attr( "href", mapping_details_link_URL );
 	
 	$mapping_details_link.hide();
+	
 	
 
 	
@@ -350,7 +361,9 @@ function processStatus( params ) {
 			
 			statusUpdateDelay = UPDATE_STATUS_DELAY_DETAILS_DISPLAYED;
 			
-		} else if ( statusData.userInputRequired ) { //  User input required and user not actively working on it.
+		} else if ( statusData.userInputRequired || statusData.userConfirmationRequired ) { 
+			
+			//  User input required and user not actively working on it.
 
 			//  10% of UPDATE_STATUS_DELAY_USER_INPUT_REQUIRED
 			
@@ -485,9 +498,22 @@ function processStatus( params ) {
 		
 		
 		
+		var $confirm_do_import_container = $("#confirm_do_import_container");
+		
+		if ( statusData.userConfirmationRequired  ) {
+			
+			$confirm_do_import_container.show();
+		} else {
+			
+			$confirm_do_import_container.hide();
+		}
+		
+		
+		
 		var $mapping_details_link = $("#mapping_details_link");
 		
-		if ( statusData.userInputRequired || statusData.importComplete || statusData.importProcessing ) {
+		if ( statusData.userInputRequired || statusData.userConfirmationRequired 
+				|| statusData.importComplete || statusData.importProcessing ) {
 			
 			$mapping_details_link.show();
 		} else {
@@ -1076,6 +1102,73 @@ function showImportErrorProcessResponse( params ) {
 	}
 
 }
+
+
+
+/////////////////////////////
+
+//   Confirm do import step
+
+function confirmDoImportStep( ) {
+
+	var file_import_id = $("#file_import_id").val();
+
+
+	var ajaxRequestData = {
+
+			fasta_import_tracking_id : file_import_id
+	};
+
+	var _URL = contextPathJSVar + "/services/confirmDoImport/update";
+
+
+
+	$.ajax({
+		type: "POST",
+		url: _URL,
+		data: ajaxRequestData,  //  The data sent
+
+		dataType: "json", // returned data type
+
+		traditional: true,  //  Force traditional serialization of the data sent
+//		One thing this means is that arrays are sent as the object property instead of object property followed by "[]".
+//		So searchIds array is passed as "searchIds=<value>" which is what Jersey expects
+
+		success: function(data)	{
+
+			confirmDoImportStepProcessResponse( { ajaxResponseData: data, ajaxRequestData: ajaxRequestData });
+
+		},
+		failure: function(errMsg) {
+			handleAJAXFailure( errMsg );
+		},
+		error: function(jqXHR, textStatus, errorThrown) {	
+
+			handleAJAXError( jqXHR, textStatus, errorThrown );
+		}
+	});
+}
+
+
+
+
+function confirmDoImportStepProcessResponse( params ) {
+
+//	var ajaxResponseData = params.ajaxResponseData;
+
+	setTimeout( function() {
+
+//		refresh after delay
+
+		showFile();
+
+	}, SHOW_FILE_AFTER_CONFIRM_DO_IMPORT_DELAY );
+
+
+}
+
+
+
 
 /////////////////////////////
 

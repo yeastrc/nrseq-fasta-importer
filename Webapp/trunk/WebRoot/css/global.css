@@ -1,7 +1,7 @@
 
 .failed-status, .system-error-status { background-color: #FFDDDD; }
 
-.user-input-required-status { background-color: #FFFFDD; }
+.user-input-confirmation-required-status, .user-input-required-status { background-color: #FFFFDD; }
 
 .queued-status, .started-status, .complete-status { background-color: #DDFFDD; }
 

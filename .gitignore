@@ -11,3 +11,10 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 /Database/nrseq_fasta_importer_DB.mwb.bak
+/Webapp/trunk/build_dir
+/Webapp/trunk/deploy
+/Webapp/trunk/ZZ__Unused
+/Webapp/trunk/.project
+/Webapp/trunk/.classpath
+/release
+/Webapp/trunk/.settings

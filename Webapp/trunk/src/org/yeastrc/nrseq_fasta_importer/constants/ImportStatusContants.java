@@ -22,7 +22,8 @@ public class ImportStatusContants {
 	
 	
 	public static final String STATUS_USER_INPUT_REQUIRED = "user input required";
-	
+	public static final String STATUS_USER_CONFIRMATION_REQUIRED = "user confirmation required";
+
 
 	public static final String IMPORT_CORE = "import";
 	public static final String STATUS_QUEUED_FOR_IMPORT = CORE_QUEUED_FOR + IMPORT_CORE;

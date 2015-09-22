@@ -20,6 +20,7 @@ import org.yeastrc.nrseq_fasta_importer.dto.FASTAImportTrackingDTO;
 import org.yeastrc.nrseq_fasta_importer.dto.GeneralImportErrorDTO;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterRemoteWebserviceCallErrorException;
+import org.yeastrc.nrseq_fasta_importer.fasta_header_evaluation.IsDecoyHeader;
 import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileEntry;
 import org.yeastrc.nrseq_fasta_importer.intermediate_file.dto.IntermediateFileHeaderEntry;
@@ -201,6 +202,14 @@ public class CheckFASTATaxonomyIds {
 							headerFullStringForGettingTaxonomyId = headerFullStringForGettingTaxonomyId.substring( CONTAMINANT_PREFIX.length(), headerFullStringForGettingTaxonomyId.length() );
 						}
 
+						
+						if ( ( ! fastaImportTrackingDTO.isImport_decoy_sequences() )
+								&& IsDecoyHeader.getInstance().isDecoyHeader( headerNameForGettingTaxonomyId ) ) {
+							
+							continue;  //  Skip processing of this decoy header
+						}
+						
+						
 
 						FASTAHeaderImporterCopy fastaHeaderImporterCopy = new FASTAHeaderImporterCopy();
 
@@ -278,8 +287,11 @@ public class CheckFASTATaxonomyIds {
 
 					}
 
+					
+					if ( ! importFileHeaderEntryList.isEmpty() ) {
 
-					importFileWriter.insertToFile( importFileEntry );
+						importFileWriter.insertToFile( importFileEntry );
+					}
 
 				}
 
@@ -344,8 +356,15 @@ public class CheckFASTATaxonomyIds {
 
 				//   No data errors requiring user input so import the file
 
+				
 				newStatus = ImportStatusContants.STATUS_QUEUED_FOR_IMPORT;
 
+				
+				if ( fastaImportTrackingDTO.isRequire_confirm_before_insert() ) {
+
+					newStatus = ImportStatusContants.STATUS_USER_CONFIRMATION_REQUIRED;
+				}
+				
 				fastaImportTrackingDTO.setStatus( newStatus );
 
 				FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, fastaImportTrackingDTO.getId() );

@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS `fasta_import_tracking` (
   `fasta_entry_count` INT NULL,
   `get_taxonomy_ids_pass_number` INT NOT NULL DEFAULT 0,
   `yrc_nrseq_tblDatabase_id` INT NULL,
+  `import_decoy_sequences` TINYINT NULL,
+  `require_confirm_before_insert` TINYINT NULL,
   `upload_date_time` TIMESTAMP NOT NULL,
   `last_updated_date_time` TIMESTAMP NULL,
   PRIMARY KEY (`id`))
@@ -245,4 +247,3 @@ CREATE TABLE IF NOT EXISTS `fasta_import_tracking_id_creator` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB;
-

@@ -223,15 +223,20 @@ public class ProcessImportFASTAFile {
 
 						currentCheckFASTATaxonomyIds = null;
 						
-
-						String newStatus = ImportStatusContants.STATUS_IMPORT_STARTED;
-
-						currentFastaImportTrackingDTO.setStatus( newStatus );
-
-						FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, currentFastaImportTrackingDTO.getId() );
-
 						
-						
+						//  Removed since now in currentCheckFASTATaxonomyIds.checkFASTATaxonomyIds(...)
+
+//						String newStatus = ImportStatusContants.STATUS_IMPORT_STARTED;
+//						
+//						if ( currentFastaImportTrackingDTO.isRequire_confirm_before_insert() ) {
+//
+//							newStatus = ImportStatusContants.STATUS_USER_CONFIRMATION_REQUIRED;
+//						}
+//						
+//						currentFastaImportTrackingDTO.setStatus( newStatus );
+//
+//						FASTAImportTrackingDAO.getInstance().updateStatus( newStatus, currentFastaImportTrackingDTO.getId() );
+
 					}
 					
 
