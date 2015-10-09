@@ -1180,8 +1180,8 @@ function saveTaxonomyIds() {
 	
 	var userProvidedTaxonomyIds = [];
 	
-	
-	var $no_tax_id_table__tbody_tr = $("#no_tax_id_table tbody tr");
+	//  added .taxonomy_entry_container_jq to resrict to rows that have entries
+	var $no_tax_id_table__tbody_tr = $("#no_tax_id_table tbody tr.taxonomy_entry_container_jq");
 	
 	$no_tax_id_table__tbody_tr.each( function(  index, element ) {
 		
