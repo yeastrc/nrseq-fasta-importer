@@ -10,8 +10,15 @@ public class DetermineTaxonomyIdParams {
 	private String headerName;
 	private String headerDescription;
 	private int fastaImportTrackingDTOId;
+	private int headerLineNumber;
 	
 	
+	public int getHeaderLineNumber() {
+		return headerLineNumber;
+	}
+	public void setHeaderLineNumber(int headerLineNumber) {
+		this.headerLineNumber = headerLineNumber;
+	}
 	public String getHeaderFullString() {
 		return headerFullString;
 	}

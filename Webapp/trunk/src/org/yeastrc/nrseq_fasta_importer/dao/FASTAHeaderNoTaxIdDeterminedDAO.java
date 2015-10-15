@@ -291,10 +291,11 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 	/**
 	 * @param fastaImportTrackingId
 	 * @param headerName
+	 * @param headerLineNumber
 	 * @return
 	 * @throws Exception
 	 */
-	public List<FASTAHeaderNoTaxIdDeterminedDTO> getForFastaImportTrackingIdHeaderName( int fastaImportTrackingId, String headerName ) throws Exception {
+	public List<FASTAHeaderNoTaxIdDeterminedDTO> getForFastaImportTrackingIdHeaderName( int fastaImportTrackingId, String headerName, int headerLineNumber ) throws Exception {
 
 
 	
@@ -304,7 +305,7 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		
-		String sql = "SELECT * FROM fasta_header_no_tax_id_determined where fasta_import_tracking_id = ? AND header_name = ? ORDER BY id ";
+		String sql = "SELECT * FROM fasta_header_no_tax_id_determined where fasta_import_tracking_id = ? AND header_name = ? AND header_line_number = ? ORDER BY id ";
 		
 		
 //		  CREATE TABLE fasta_header_no_tax_id_determined (
@@ -327,9 +328,9 @@ public class FASTAHeaderNoTaxIdDeterminedDAO {
 			pstmt = conn.prepareStatement( sql );
 			
 			pstmt.setInt( 1, fastaImportTrackingId );
-
 			pstmt.setString( 2, headerName );
-			
+			pstmt.setInt( 3, headerLineNumber );
+
 			rs = pstmt.executeQuery();
 			
 			while( rs.next() ) {

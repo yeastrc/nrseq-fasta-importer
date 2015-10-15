@@ -150,6 +150,8 @@ public class CheckFASTATaxonomyIds {
 					
 
 					currentSequenceCount++;
+					
+					int headerLineNumber = intermediateFileEntry.getHeaderLineNumber();
 
 
 					List<IntermediateFileHeaderEntry> intermediateFileHeaderEntryList = intermediateFileEntry.getImportFileHeaderEntryList();
@@ -179,7 +181,6 @@ public class CheckFASTATaxonomyIds {
 						String headerFullString = intermediateFileHeaderEntry.getHeaderFullString();
 						String headerName = intermediateFileHeaderEntry.getHeaderName();
 						String headerDescription = intermediateFileHeaderEntry.getHeaderDescription();
-						
 						
 
 						//  Update headerName in the fastaHeaderImporterCopy object to remove contamin
@@ -216,6 +217,8 @@ public class CheckFASTATaxonomyIds {
 						fastaHeaderImporterCopy.setLine( headerFullString );
 						fastaHeaderImporterCopy.setName( headerNameForGettingTaxonomyId );
 						fastaHeaderImporterCopy.setDescription( headerDescription );
+						
+						fastaHeaderImporterCopy.setHeaderLineNumber( headerLineNumber );
 
 
 						try {

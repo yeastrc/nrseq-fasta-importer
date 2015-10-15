@@ -84,6 +84,7 @@ public class DetermineTaxonomyId {
 		
 		DetermineTaxonomyIdResult determineTaxonomyIdResult = null;
 		
+		int headerLineNumber = fastaHeaderImporterCopy.getHeaderLineNumber();
 		
 //		String headerName = header.getName();
 //		String headerDescription = header.getDescription();
@@ -94,7 +95,7 @@ public class DetermineTaxonomyId {
 		determineTaxonomyIdParams.setHeaderFullString( fastaHeaderImporterCopy.getLine() );
 		determineTaxonomyIdParams.setHeaderName( fastaHeaderImporterCopy.getName() );
 		determineTaxonomyIdParams.setHeaderDescription( fastaHeaderImporterCopy.getDescription() );
-		
+		determineTaxonomyIdParams.setHeaderLineNumber( headerLineNumber );
 		
 		for ( int index = 0; index < taxonomyLookupArray.length; index++ ) {
 

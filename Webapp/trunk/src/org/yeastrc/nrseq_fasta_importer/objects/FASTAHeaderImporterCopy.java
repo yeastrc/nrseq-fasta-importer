@@ -10,9 +10,17 @@ public class FASTAHeaderImporterCopy {
 	private String name;
 	private String description;
 	private String line;
+	private int headerLineNumber;
+	
 //	private FASTAHeader originalFASTAHeader;
 	
 	
+	public int getHeaderLineNumber() {
+		return headerLineNumber;
+	}
+	public void setHeaderLineNumber(int headerLineNumber) {
+		this.headerLineNumber = headerLineNumber;
+	}
 	public String getName() {
 		return name;
 	}

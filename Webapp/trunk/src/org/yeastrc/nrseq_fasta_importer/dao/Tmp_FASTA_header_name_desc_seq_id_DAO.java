@@ -194,10 +194,12 @@ public class Tmp_FASTA_header_name_desc_seq_id_DAO {
 
 		List<Tmp_FASTA_header_name_desc_seq_id_DTO> resultList = new ArrayList<>();
 		
+		int headerNameHashCode = headerName.hashCode();
+		
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		
-		final String sql = "SELECT id, header_line_number, header_description FROM tmp_fasta_header_name_desc_seq_id WHERE fasta_import_tracking_id = ? AND header_name_hash_code = ? AND header_name = ?";
+		final String sql = "SELECT id, header_line_number, header_description, tmp_fasta_sequence_id_fk FROM tmp_fasta_header_name_desc_seq_id WHERE fasta_import_tracking_id = ? AND header_name_hash_code = ? AND header_name = ?";
 		
 
 		//CREATE TABLE tmp_fasta_header_name_desc_seq_id (
@@ -219,12 +221,10 @@ public class Tmp_FASTA_header_name_desc_seq_id_DAO {
 			counter++;
 			pstmt.setInt( counter, fastaImportTrackingId );
 			counter++;
-			pstmt.setInt( counter, headerName.hashCode() );
+			pstmt.setInt( counter, headerNameHashCode );
 			counter++;
 			pstmt.setString( counter, headerName );
 
-			
-			pstmt.setString( 1, headerName );
 			
 			rs = pstmt.executeQuery();
 			

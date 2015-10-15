@@ -41,9 +41,11 @@ public class TaxonomyIdFromUser implements TaxonomyIdLookupIF {
 //		String headerDescription = header.getDescription();
 		
 		int fastaImportTrackingId = determineTaxonomyIdParams.getFastaImportTrackingDTOId();
+		
+		int headerLineNumber = determineTaxonomyIdParams.getHeaderLineNumber();
 	
 		List<FASTAHeaderNoTaxIdDeterminedDTO>  taxList = 
-				FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingIdHeaderName( fastaImportTrackingId, headerName );
+				FASTAHeaderNoTaxIdDeterminedDAO.getInstance().getForFastaImportTrackingIdHeaderName( fastaImportTrackingId, headerName, headerLineNumber );
 		
 		if ( taxList.isEmpty() ) {
 			
