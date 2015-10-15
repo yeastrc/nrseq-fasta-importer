@@ -365,7 +365,8 @@
 		    	<table id="no_tax_id_entry_template"  style="display: none;">
 		    	
 		    	  <tbody>
-		    	   <tr id="taxonomy_entry_container_{{item.id}}" class=" taxonomy_entry_container_jq  " 
+		    	   <tr id="taxonomy_entry_container_{{item.id}}" 
+		    	   		class=" taxonomy-id-needed-row   taxonomy_entry_container_jq  " 
 		    	   		data-record-id="{{item.id}}" data-header-line-number="{{item.headerLineNumber}}">
 		    	  	
 		    	  	<td style="padding-top: 5px; padding-bottom: 5px; border-right-width: 0px;">
@@ -384,12 +385,7 @@
 		    	  	  </div>
 		    	  	  
 		    	  	  <div style="margin-top: 3px;">
-		    	  	  	<%-- 
-		    	  			<select class=" taxonomy_suggestion_jq "  style="display: none; " onchange="taxonomySuggestionChanged(this)" >
-		    	  				<option value="">Suggestions</option>	
-		    	  			</select>
-		    	  		--%>
-		    	  		
+
 		    	  		<div class=" suggestions_holder_jq " style="display: none; margin-top: 5px;">
 		    	  			Suggestions
 		    	  			<div class=" suggestions_group_jq ">
@@ -397,11 +393,7 @@
 		    	  			</div>
 		    	  		
 		    	  		</div>
-	<%-- 	    	  		
-						<div style="margin-top: 3px;">
-		    	  	  		<a href="blastSequence.do?id={{item.id}}" target="_blank" >blast sequence</a>
-		    	  	  	</div>
-	--%>	    	  	  	
+
 		    	  	  </div>
 		    	  	</td>
 		    	  	<td style="padding: 0px; ">

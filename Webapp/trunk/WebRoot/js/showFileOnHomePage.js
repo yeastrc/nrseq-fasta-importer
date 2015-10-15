@@ -472,12 +472,12 @@ function processStatus( params ) {
 		
 
 	
-	var user_entered_file_import_id = $("#user_entered_file_import_id").val();
-	
-	if ( user_entered_file_import_id === file_import_id ) {
-		
-		var z = 0;
-	}
+//	var user_entered_file_import_id = $("#user_entered_file_import_id").val();
+//	
+//	if ( user_entered_file_import_id === file_import_id ) {
+//		
+//		var z = 0;
+//	}
 
 	
 
@@ -827,7 +827,8 @@ function showNoTaxonomy( params ) {
 function showNoTaxonomyProcessResponse( params ) {
 
 	var ajaxResponseData = params.ajaxResponseData;
-	var ajaxRequestData = params.ajaxRequestData;
+	
+//	var ajaxRequestData = params.ajaxRequestData;
 	
 	if ( ajaxResponseData && ajaxResponseData.length > 0 ) {
 
@@ -873,9 +874,6 @@ function showNoTaxonomyProcessResponse( params ) {
 		
 		var suggestion_button_template__template = Handlebars.compile(suggestion_button_template__source);
 
-//		var $spacer_row_template_html = 
-//		$(spacer_row_template_html).appendTo( $no_tax_id_table__tbody );
-		
 //		process the file list
 		for ( var noTaxonomyListIndex = 0; noTaxonomyListIndex < noTaxonomyList.length; noTaxonomyListIndex++ ) {
 
@@ -916,24 +914,6 @@ function showNoTaxonomyProcessResponse( params ) {
 
 				}
 
-				
-//				var $taxonomy_suggestion_jq = $no_tax_id_entry.find(".taxonomy_suggestion_jq");
-//
-//				$taxonomy_suggestion_jq.show();
-//				
-//				for ( var suggestionsIndex = 0; suggestionsIndex < fileEntry.suggestions.length; suggestionsIndex++ ) {
-//					
-//					var suggestion = fileEntry.suggestions[ suggestionsIndex ];
-//					
-//					var html = '<option value="' + suggestion.taxonomyId + '" >' +
-//						suggestion.taxonomyId +
-////						" : " + 
-////						suggestion.accessionString +
-//						'</option>';
-//					
-//					$( html ).appendTo( $taxonomy_suggestion_jq );
-//					
-//				}
 			}
 			
 			if ( noTaxonomyListIndex < noTaxonomyList.length - 1 ) {
@@ -1092,10 +1072,8 @@ function showImportErrorProcessResponse( params ) {
 
 			var html = template(context);
 
-			var $general_error_entry = $(html).appendTo( $general_errors );
-
-
-
+//			var $general_error_entry = 
+			$(html).appendTo( $general_errors );
 		}
 
 		$("#general_error_container").show();
@@ -1319,28 +1297,6 @@ function saveTaxonomyIdsCallAJAXProcessResponse( params ) {
 
 
 
-///////////////////////
-
-//  For <select>
-
-function taxonomySuggestionChanged( taxonomySuggestionFieldHTMLElement ) {
-	
-	var $taxonomySuggestionFieldHTMLElement = $( taxonomySuggestionFieldHTMLElement );
-	
-	var taxonomySuggestionFieldValue = $taxonomySuggestionFieldHTMLElement.val();
-	
-	var $taxonomy_entry_container_jq = $taxonomySuggestionFieldHTMLElement.closest(".taxonomy_entry_container_jq");
-	
-	var $taxonomy_id_from_user_jq = $taxonomy_entry_container_jq.find(".taxonomy_id_from_user_jq");
-	
-	$taxonomy_id_from_user_jq.val( taxonomySuggestionFieldValue );
-	
-	var taxonomy_id_from_userHTMLElement = $taxonomy_id_from_user_jq[0];
-	
-	taxonomyIdChanged( taxonomy_id_from_userHTMLElement );
-}
-
-
 
 ///////////////////////
 
@@ -1484,7 +1440,7 @@ function saveTaxonomyIdToDBOnChange( params ) {
 
 		success: function(data)	{
 
-			var z = 0;
+//			var z = 0;
 		},
 		failure: function(errMsg) {
 			handleAJAXFailure( errMsg );
@@ -1539,6 +1495,8 @@ function lookupOrganismForTaxonomyId( params ) {
 	if ( ! is_numeric( taxonomyIdString ) ) {
 
 		$taxonomy_id_must_be_integer_jq.show();
+		
+		updateSaveTaxonomyIdsButtonForTaxonomyIdChange();
 
 		return false;  //  EARLY EXIT
 	}
@@ -1548,6 +1506,8 @@ function lookupOrganismForTaxonomyId( params ) {
 	if ( isNaN( taxonomyId ) ) {
 		
 		$taxonomy_id_must_be_integer_jq.show();
+		
+		updateSaveTaxonomyIdsButtonForTaxonomyIdChange();
 
 		return false;  //  EARLY EXIT
 	}
@@ -1627,6 +1587,12 @@ function updateSaveTaxonomyIdsButtonForTaxonomyIdChange() {
 		if ( taxonomy_id_organism_jq__text === "" ) {
 			
 			allTaxonomyIdsFound = false;
+			
+			setEnterTaxonomyIdRowToNeeded( $taxonomy_entry_container_jq );
+		
+		} else {
+			
+			setEnterTaxonomyIdRowToAccepted( $taxonomy_entry_container_jq );
 		}
 		
 	});
@@ -1642,6 +1608,25 @@ function updateSaveTaxonomyIdsButtonForTaxonomyIdChange() {
 		$("#save_taxonomy_ids_button").prop( "disabled", true );
 	}
 }
+
+
+
+/////////
+
+function setEnterTaxonomyIdRowToNeeded( $taxonomy_entry_container_jq ) {
+
+	$taxonomy_entry_container_jq.removeClass( "taxonomy-id-accepted-row" );
+	$taxonomy_entry_container_jq.addClass( "taxonomy-id-needed-row" );
+}
+
+/////////
+
+function setEnterTaxonomyIdRowToAccepted( $taxonomy_entry_container_jq ) {
+
+	$taxonomy_entry_container_jq.removeClass( "taxonomy-id-needed-row" );
+	$taxonomy_entry_container_jq.addClass( "taxonomy-id-accepted-row" );
+}
+
 
 
 
@@ -1673,23 +1658,5 @@ var attachFileImportDetailsOverlayClickHandlers = function (  ) {
 
 		closeFileImportDetailsOverlay();
 	} );
-
-//	$(".file-upload-details-overlay-div").click( function( eventObject ) {
-//
-//		closeFileImportDetailsOverlay();
-//	} );
-
-//	$(".error-message-ok-button").click( function( eventObject ) {
-//
-//		closeFileImportDetailsOverlay();
-//	} );
-
-	
-	
-	
-//	$("#file-upload-details-overlay-div").click( function( eventObject ) {
-//
-//		return false;
-//	} );
 
 };

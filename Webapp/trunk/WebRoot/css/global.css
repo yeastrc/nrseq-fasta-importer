@@ -23,6 +23,11 @@ table#no_tax_id_table th.header-line-number , table#no_tax_id_table td.header-li
 }
 
 
+/* colors for rows where user enters taxonomy ids */
+
+.taxonomy-id-needed-row { background-color: #FFF0F0 }
+
+.taxonomy-id-accepted-row { background-color: #F0FFF0 }
 
 
 div.submitted-fasta-files-root table { padding: 0px; margin: 0px; border-spacing: 0px; }
