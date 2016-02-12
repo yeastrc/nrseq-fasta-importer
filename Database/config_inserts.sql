@@ -1,6 +1,7 @@
 
 
 --   Directory on server where this FASTA importer writes files to
+--   Tomcat must have write access to this directory.
 
 INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
 	VALUES ('fasta_importer_work_directory', '??????');
@@ -11,12 +12,12 @@ INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`
 INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
 	VALUES ('server_url', '??????');
 
---  example http:192.168.1.2:8080
+--  example http://192.168.1.2:8080
 
 
 --  Email
 
---  	choose one of the next 2 inserts:
+--  	choose 1 of the next 2 inserts:
 
 INSERT INTO `nrseq_fasta_importer`.`config_system` (`config_key`, `config_value`) 
 	VALUES ('email_send_emails', 'true');

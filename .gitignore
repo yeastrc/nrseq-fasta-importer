@@ -18,3 +18,4 @@ hs_err_pid*
 /Webapp/trunk/.classpath
 /release
 /Webapp/trunk/.settings
+/bin/
