@@ -5,10 +5,17 @@
 
 Welcome to nrseq-fasta-importer's documentation!
 ================================================
+To learn more about the innards and working of the associated databases
+and software, see the :doc:`about` page. To learn about how to install
+the nrseq-fasta-importer application, see the :doc:`/installing` page. And,
+to learn more about how to use the nrseq-fasta-importer web application,
+see the :doc:`/using` page.
 
-
+Table of Contents
+=================================================
 .. toctree::
    :maxdepth: 2
    
+   about
    installing
    using
