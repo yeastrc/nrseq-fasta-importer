@@ -145,7 +145,7 @@ automatically deploy. If not, restart Tomcat to force the file to deploy.
 
 Your web application should now be available at http://your.host:8080/nrseq-fasta-importer/
 (Depending on how you have configured your web server, the ``:8080`` may not be different or
-not required.)
+not required.) If you have a firewall running, will need to allow access through this port.
 
 
 6. Configure security for Apache Tomcat (optional but recommended)
