@@ -5,9 +5,10 @@ Installing nrseq-fasta-importer
 1. Install MySQL, Java, and Apache Tomcat (if necessary)
 ==========================================================
 
-This documentation assumes that `Java <http://www.java.com/>`_ (1.7 or later) and the
+This documentation assumes that `Java <http://www.java.com/>`_ (JDK version, 1.7 or later) and the
 `Apache Tomcat <http://tomcat.apache.org/>`_ (7 or later) servlet container are installed on the same
-computer on which you are installing nrseq-fasta-importer.
+computer on which you are installing ProXL. (Note: Apache Tomcat requires the JDK version of Java be
+installed.)
 
 This documentation also assumes that `MySQL <http://www.mysql.com/>`_ (5.6 or later) has been
 installed and is accessible by the installation of Apache Tomcat. This does not need to be on the
