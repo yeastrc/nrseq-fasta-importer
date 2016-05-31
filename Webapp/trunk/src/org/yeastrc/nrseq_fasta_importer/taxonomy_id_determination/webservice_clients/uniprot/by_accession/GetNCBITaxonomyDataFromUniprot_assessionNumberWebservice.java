@@ -69,7 +69,7 @@ public class GetNCBITaxonomyDataFromUniprot_assessionNumberWebservice {
 					if( !line.startsWith( "OX" ) ) continue;
 					if( line.startsWith( "//" ) ) break;
 
-					Pattern p = Pattern.compile( "^OX\\s+NCBI_TaxID=(\\d+);$" );
+					Pattern p = Pattern.compile( "^OX\\s+NCBI_TaxID=(\\d+)\\D.*$" );
 					Matcher m = p.matcher( line );
 
 					if( !m.matches() ) continue;
