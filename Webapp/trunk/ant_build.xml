@@ -4,16 +4,20 @@
   <target name="init">
     <tstamp/>
 
+  	<!--  The GIT root directory is up 2 directories from this Ant script --> 
+	<available file="../../.git" type="dir" property="git.present"/>
+	
+
   	<!-- name of jar or whatever that is copied to deploy -->
     <property name="deployablename" value="nrseq-fasta-importer.war" />
 
     <property name="src" value="src" />
-    <property name="build_dir" value="build_dir" />
+    <property name="zz_build_dir" value="zz_build_dir" />
     <property name="build" value="build" />
-    <property name="classesweb" value="build_dir/WEB-INF/classes" />
+    <property name="classesweb" value="zz_build_dir/WEB-INF/classes" />
     <property name="deploy" value="deploy" />
     <property name="config" value="resources" />
-    <property name="libweb" value="build_dir/WEB-INF/lib" />
+    <property name="libweb" value="zz_build_dir/WEB-INF/lib" />
   	
 	<property name="java.compiler.source.version" value="1.7"/>
 	<property name="java.compiler.destination.version" value="1.7"/>
@@ -34,16 +38,64 @@
 	
   <target name="clean" depends="init">
     <delete dir="${classesweb}" />
-  	<delete dir="${build_dir}" />
+  	<delete dir="${zz_build_dir}" />
     <delete dir="${deploy}" />
   </target>
 
   <target name="prepare" depends="clean">
-  	<mkdir dir="${build_dir}" />
+  	<mkdir dir="${zz_build_dir}" />
     <mkdir dir="${classesweb}" />
     <mkdir dir="${deploy}" />
   </target>
 
+	
+	
+
+
+	<target name="git.revision" 
+			description="Store git revision in ${git.last.tag.and.commit.hash} and ${git.last.commit.hash}" 
+			if="git.present">
+		
+		<exec executable="git" outputproperty="git.last.tag.and.commit.hash.from.cmd" failifexecutionfails="false" errorproperty="">
+			<arg value="describe"/>
+			<arg value="--tags"/>
+			<arg value="--always"/>
+			<arg value="HEAD"/>
+		</exec>
+		
+		<echo message="git.last.tag.and.commit.hash.from.cmd: ${git.last.tag.and.commit.hash.from.cmd}"/>
+		
+		<condition property="git.last.tag.and.commit.hash" value="${git.last.tag.and.commit.hash.from.cmd}" else="unknown">
+			<and>
+				<isset property="git.last.tag.and.commit.hash.from.cmd"/>
+				<length string="${git.last.tag.and.commit.hash.from.cmd}" trim="yes" length="0" when="greater"/>
+			</and>
+		</condition>
+		
+		<echo message="git.last.tag.and.commit.hash: ${git.last.tag.and.commit.hash}"/>
+
+
+		<exec executable="git" outputproperty="git.last.commit.hash.from.cmd" failifexecutionfails="false" errorproperty="">
+			<arg value="describe"/>
+			<arg value="--always"/>
+			<arg value="HEAD"/>
+		</exec>
+				
+
+		<echo message="git.last.commit.hash.from.cmd: ${git.last.commit.hash.from.cmd}"/>
+		
+		<condition property="git.last.commit.hash" value="${git.last.commit.hash.from.cmd}" else="unknown">
+			<and>
+				<isset property="git.last.commit.hash.from.cmd"/>
+				<length string="${git.last.commit.hash.from.cmd}" trim="yes" length="0" when="greater"/>
+			</and>
+		</condition>
+		
+		<echo message="git.last.commit.hash: ${git.last.commit.hash}"/>
+	
+	</target>	
+		
+	
   <target name="compile" depends="prepare">
 
   	<!--   Prep Build area  -->
@@ -51,7 +103,7 @@
 
   	<!--  Copy in everything under WebRoot except under 'classes' -->
 
-	<copy  todir="build_dir">
+	<copy  todir="zz_build_dir">
 	    <fileset dir="WebRoot">
 			<exclude name="WEB-INF/classes/**" />
 			<exclude name="META-INF/**" />
@@ -92,16 +144,20 @@
   </target>
 
 
-	<target name="package_war" depends="compile"
+	<target name="package_war" depends="compile,git.revision"
 		description="Packages the project as a deployable war file">
 
-		<war jarfile="${deploy}/${deployablename}" webxml="build_dir/WEB-INF/web.xml">
+		<war jarfile="${deploy}/${deployablename}" webxml="zz_build_dir/WEB-INF/web.xml">
+
 			<manifest>
+	        	<attribute name="GIT-last-tag-commit-hash" value="${git.last.tag.and.commit.hash}"/>
+            	<attribute name="GIT-commit-hash" value="${git.last.commit.hash}"/>
+				
 				<attribute name="Date" value="${build-info.current-date}" />
 				<attribute name="Time" value="${build-info.current-time}" />
 			</manifest>			
 	
-	    	<fileset dir="build_dir">
+	    	<fileset dir="zz_build_dir">
 
 	     	</fileset>
 	
@@ -112,7 +168,7 @@
 	
 	<path id="classpath">
 
-		<fileset dir="build_dir/WEB-INF/lib">
+		<fileset dir="zz_build_dir/WEB-INF/lib">
 			<include name="**/*.jar"/>
 		</fileset>
 
