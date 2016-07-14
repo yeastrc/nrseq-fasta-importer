@@ -4,12 +4,16 @@ import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 import org.yeastrc.nrseq_fasta_importer.constants.NCBITaxonomyDataConstants;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.webservice_response_dto.NcbiTaxonomyDataRootDTO;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.webservice_response_dto.NcbiTaxonomyErrorRootDTO;
@@ -66,8 +70,22 @@ public class GetNCBITaxonomyDataFromNCBIWebservice {
 			httpResponse = client.execute(httpGet);
 
 			inputStreamHttpResponse = httpResponse.getEntity().getContent(); 
+			
+			
+			//  Turn off loading external DTDs
+			
+			SAXParserFactory spf = SAXParserFactory.newInstance();
+			spf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+			spf.setFeature("http://xml.org/sax/features/validation", false);
 
-			Object returnedObject = unmarshaller.unmarshal( inputStreamHttpResponse );
+			XMLReader xmlReader = spf.newSAXParser().getXMLReader();
+			InputSource inputSource = new InputSource( inputStreamHttpResponse );
+			
+			SAXSource saxSource = new SAXSource(xmlReader, inputSource);
+			
+			Object returnedObject = unmarshaller.unmarshal( saxSource );
+			
+			
 			
 			if ( returnedObject instanceof NcbiTaxonomyDataRootDTO ) {
 				
