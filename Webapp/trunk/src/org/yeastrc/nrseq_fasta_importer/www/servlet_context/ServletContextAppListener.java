@@ -5,6 +5,7 @@ import javax.servlet.http.*;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.constants.WebConstants;
+import org.yeastrc.nrseq_fasta_importer.db.DBSet_JNDI_Name_FromConfigFile;
 import org.yeastrc.nrseq_fasta_importer.fasta_importer_work_dir.Get_FASTA_Importer_Work_Directory_And_SubDirs;
 import org.yeastrc.nrseq_fasta_importer.send_email.GetEmailConfig;
 import org.yeastrc.nrseq_fasta_importer.server_url.GetServerURLConfig;
@@ -29,6 +30,12 @@ public class ServletContextAppListener extends HttpServlet implements ServletCon
 		log.warn( "INFO:  !!!!!!!!!!!!!!!   Start up of web app  'NRSEQ FASTA Importer' beginning  !!!!!!!!!!!!!!!!!!!! " );
 
 
+		try {
+			DBSet_JNDI_Name_FromConfigFile.getInstance().dbSet_JNDI_Name_FromConfigFile();
+		} catch (Exception e) {
+			//  already logged
+			throw new RuntimeException( e );
+		} 
 		
 
 		ServletContext context = event.getServletContext();
