@@ -67,4 +67,4 @@ CREATE TABLE `tblProteinSequence` (
   `sequence` mediumtext,
   PRIMARY KEY (`id`),
   KEY `sequence` (`sequence`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=26326391 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
