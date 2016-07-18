@@ -146,9 +146,10 @@ function updateFileListProcessResponse( params ) {
 //		callAfterUpdate();
 //	
 //	} 
+	window.setTimeout( function() {
 	
-	
-	showFileDetailsForIdInHiddenField();
+		showFileDetailsForIdInHiddenField();
+	}, 1000);
 }
 
 
