@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.db.DBConnectionFactory;
@@ -223,11 +225,75 @@ public class YRC_NRSEQ_tblDatabaseDAO {
 	
 
 	/**
+	 * @return 
+	 * @throws Exception
+	 */
+	public List<YRC_NRSEQ_tblDatabaseDTO> getAll( ) throws Exception {
+
+
+		List<YRC_NRSEQ_tblDatabaseDTO> resultList = new ArrayList<>();
+		
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		final String sql = "SELECT * FROM tblDatabase ";
+		
+		try {
+			
+			conn = DBConnectionFactory.getConnection( DBConnectionFactory.YRC_NRSEQ );
+			
+			pstmt = conn.prepareStatement( sql );
+			
+			rs = pstmt.executeQuery();
+			
+			while ( rs.next() ) {
+				
+				YRC_NRSEQ_tblDatabaseDTO result = populateResultObject( rs );;
+				
+				resultList.add( result );
+			}
+			
+		} catch ( Exception e ) {
+			
+			String msg = "Failed to select all YRC_NRSEQ_tblDatabaseDTO, sql: " + sql;
+			
+			log.error( msg, e );
+			
+			throw e;
+			
+
+		} finally {
+			
+			// be sure database handles are closed
+			if( rs != null ) {
+				try { rs.close(); } catch( Throwable t ) { ; }
+				rs = null;
+			}
+			
+			if( pstmt != null ) {
+				try { pstmt.close(); } catch( Throwable t ) { ; }
+				pstmt = null;
+			}
+			
+			if( conn != null ) {
+				try { conn.close(); } catch( Throwable t ) { ; }
+				conn = null;
+			}
+			
+		}
+		
+		return resultList;
+	}
+	
+	
+
+	/**
 	 * @param rs
 	 * @return
 	 * @throws SQLException
 	 */
-	private YRC_NRSEQ_tblDatabaseDTO populateResultObject(ResultSet rs) throws SQLException {
+	public YRC_NRSEQ_tblDatabaseDTO populateResultObject(ResultSet rs) throws SQLException {
 		
 		YRC_NRSEQ_tblDatabaseDTO returnItem = new YRC_NRSEQ_tblDatabaseDTO();
 

@@ -42,9 +42,10 @@
 	
 	
 	<div >
+		<a href="listFiles.do" >List files in database</a>
 	
 		<h3>
-			Update a new FASTA file
+			Import a new FASTA file
 		</h3>
 	       
 	    <div >

@@ -55,6 +55,13 @@
 		
 		
 		
+		<action path="/listFiles"
+				type="org.yeastrc.nrseq_fasta_importer.www.struts.ListFASTAFilesInDBAction"
+				scope="request"
+				validate="false">
+			<forward name="Success" path="/WEB-INF/jsp-pages/listFiles.jsp" redirect="false" />
+		</action>	
+		
 	</action-mappings>
 	
   <message-resources parameter="org.yeastrc.nrseq_fasta_importer.ApplicationResources" />
