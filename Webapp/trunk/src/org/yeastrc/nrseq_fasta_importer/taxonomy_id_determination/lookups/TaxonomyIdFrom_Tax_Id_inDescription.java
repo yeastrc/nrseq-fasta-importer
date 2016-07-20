@@ -3,7 +3,7 @@ package org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.lookups;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 import org.yeastrc.nrseq_fasta_importer.exception.FASTAImporterDataErrorException;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdParams;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.DetermineTaxonomyIdResult;
@@ -18,38 +18,35 @@ import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.TaxonomyIdLook
  */
 public class TaxonomyIdFrom_Tax_Id_inDescription implements TaxonomyIdLookupIF {
 
-	private static final Logger log = Logger.getLogger(TaxonomyIdFrom_Tax_Id_inDescription.class);
+//	private static final Logger log = Logger.getLogger(TaxonomyIdFrom_Tax_Id_inDescription.class);
 
 
-//	private Pattern taxidPattern = Pattern.compile( "^.+\\s+Tax_Id=(\\d+)\\s+.+$" );
-//
-//	private Pattern taxonomy_id_Pattern = Pattern.compile( "^.+\\s+Taxonomy_Id=(\\d+)\\s+.+$" );
-
-	
 
 	private Pattern[]  taxIdPatterns = {
+			
+			//  Make case insensitive  Pattern.CASE_INSENSITIVE
 			
 			//  Tax_Id=
 			
 			// MiddleOfLine
-			Pattern.compile( "^.*\\s+Tax_Id=(\\d+)\\s+.*$" ),
+			Pattern.compile( "^.*\\s+Tax_Id=(\\d+)\\s+.*$", Pattern.CASE_INSENSITIVE ),
 			// StartOfLine = 
-			Pattern.compile( "^Tax_Id=(\\d+)\\s+.*$" ),
+			Pattern.compile( "^Tax_Id=(\\d+)\\s+.*$", Pattern.CASE_INSENSITIVE ),
 			// EndOfLine = 
-			Pattern.compile( "^.*\\s+Tax_Id=(\\d+)$" ),
+			Pattern.compile( "^.*\\s+Tax_Id=(\\d+)$", Pattern.CASE_INSENSITIVE ),
 			// AllOfLine = 
-			Pattern.compile( "^Tax_Id=(\\d+)$" ),
+			Pattern.compile( "^Tax_Id=(\\d+)$", Pattern.CASE_INSENSITIVE ),
 
 			//  Taxonomy_Id=
 			
 			// MiddleOfLine = 
-			Pattern.compile( "^.*\\s+Taxonomy_Id=(\\d+)\\s+.*$" ),
+			Pattern.compile( "^.*\\s+Taxonomy_Id=(\\d+)\\s+.*$", Pattern.CASE_INSENSITIVE ),
 			// StartOfLine = 
-			Pattern.compile( "^Taxonomy_Id=(\\d+)\\s+.*$" ),
+			Pattern.compile( "^Taxonomy_Id=(\\d+)\\s+.*$", Pattern.CASE_INSENSITIVE ),
 			// EndOfLine = 
-			Pattern.compile( "^.*\\s+Taxonomy_Id=(\\d+)$" ),
+			Pattern.compile( "^.*\\s+Taxonomy_Id=(\\d+)$", Pattern.CASE_INSENSITIVE ),
 			// AllOfLine = 
-			Pattern.compile( "^Taxonomy_Id=(\\d+)$" )
+			Pattern.compile( "^Taxonomy_Id=(\\d+)$", Pattern.CASE_INSENSITIVE )
 	};
 
 	
