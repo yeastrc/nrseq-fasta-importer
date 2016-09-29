@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
+import org.yeastrc.nrseq_fasta_importer.constants.TaxonomyIdZeroTaxonomyLabelConstants;
 import org.yeastrc.nrseq_fasta_importer.constants.WebServiceErrorMessageConstants;
 import org.yeastrc.nrseq_fasta_importer.objects.NcbiTaxonomyDataResponse;
 import org.yeastrc.nrseq_fasta_importer.taxonomy_id_determination.webservice_clients.ncbi.by_taxonomy_id.GetNCBITaxonomyDataFromNCBIWebservice;
@@ -30,18 +31,35 @@ public class GetDataFromNCBIForTaxonomyIdWebservice {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/get") 
 	
-	public NcbiTaxonomyDataResponse get( @QueryParam( "taxonomyId" ) long taxonomyId,
+	public NcbiTaxonomyDataResponse get( @QueryParam( "taxonomyId" ) Long taxonomyId,
 			@Context HttpServletRequest request )
 	throws Exception {
 
-//		if (true)
-//		throw new Exception("Forced Error");
+
+		if ( taxonomyId == null ) {
+		
+			throw new WebApplicationException(
+					Response.status( WebServiceErrorMessageConstants.INVALID_PARAMETER_STATUS_CODE )  //  Send HTTP code
+					.entity( WebServiceErrorMessageConstants.INVALID_PARAMETER_TEXT ) // This string will be passed to the client
+					.build()
+					);
+		}
 		
 		try {
 			
 //			 <ScientificName>Flaveria trinervia</ScientificName> 
 			
 			NcbiTaxonomyDataResponse ncbiTaxonomyDataResponse = new NcbiTaxonomyDataResponse();
+			
+			if ( taxonomyId == 0 ) {
+				
+				//   Hard coded response for taxonomy id zero
+				
+				ncbiTaxonomyDataResponse.setScientificNameFound(true);
+				ncbiTaxonomyDataResponse.setScientificName( TaxonomyIdZeroTaxonomyLabelConstants.TAXONOMY_ID_ZERO_LABEL );
+				
+				return ncbiTaxonomyDataResponse;  //  EARLY RETURN
+			}
 			
 			GetNCBITaxonomyDataFromNCBIWebserviceResponse getNCBITaxonomyDataFromNCBIWebserviceResponse =
 					GetNCBITaxonomyDataFromNCBIWebservice.getInstance().getNCBITaxonomyDataFromNCBIWebservice( taxonomyId );
